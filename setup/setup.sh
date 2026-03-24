@@ -33,6 +33,7 @@ pip install -q \
     "torch==2.10.0" \
     "transformers==4.57.6" \
     "click==8.1.7" \
+    "boto3" \
     "peft" \
     "huggingface_hub==0.36.2" \
     "aiohttp" \
