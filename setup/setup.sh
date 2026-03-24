@@ -30,14 +30,14 @@ echo "source ~/venv/bin/activate" >> ~/.bashrc
 pip install -q \
     "ray[serve,llm]==2.47.1" \
     "vllm==0.18.0" \
-    "outlines_core==0.1.26" \
     "torch==2.10.0" \
     "transformers==4.57.6" \
+    "click==8.1.7" \
     "peft" \
     "huggingface_hub==0.36.2" \
     "aiohttp" \
     --no-cache-dir
-    
+
 # ── 2. Download model ─────────────────────────────────────────────────────────
 mkdir -p ~/model_cache ~/adapters
 
