@@ -27,8 +27,17 @@ python3 -m venv ~/venv
 source ~/venv/bin/activate
 echo "source ~/venv/bin/activate" >> ~/.bashrc
 
-pip install -q "ray[serve,llm]" vllm torch transformers peft huggingface_hub aiohttp
-
+pip install -q \
+    "ray[serve,llm]==2.47.1" \
+    "vllm==0.18.0" \
+    "outlines_core==0.1.26" \
+    "torch==2.10.0" \
+    "transformers==4.57.6" \
+    "peft" \
+    "huggingface_hub==0.36.2" \
+    "aiohttp" \
+    --no-cache-dir
+    
 # ── 2. Download model ─────────────────────────────────────────────────────────
 mkdir -p ~/model_cache ~/adapters
 
