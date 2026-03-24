@@ -41,33 +41,63 @@ print(f"\nModel path: {MODEL_PATH}")
 print(f"Adapter path: {ADAPTER_PATH}")
 
 # ── LLM Config ────────────────────────────────────────────────────────────────
+# llm_config = LLMConfig(
+#     model_loading_config=dict(
+#         model_id="qwen-base",
+#         model_source=MODEL_PATH,
+#     ),
+#     lora_config=dict(
+#         dynamic_lora_loading_path=ADAPTER_PATH,
+
+#         # VERY IMPORTANT: forces constant eviction + cold loads
+#         max_num_adapters_per_replica=3,
+#     ),
+#     engine_kwargs=dict(
+#         enable_lora=True,
+#         max_loras=3,          # GPU slots (tight)
+#         max_cpu_loras=6,      # CPU cache (also limited)
+#         max_lora_rank=8,
+#         gpu_memory_utilization=0.6,
+#         max_model_len=512,
+#         dtype="float16",
+#     ),
+#     deployment_config=dict(
+#         num_replicas=4,
+
+#         # Prevent overload (keeps behavior stable for experiment)
+#         max_ongoing_requests=4,
+
+#         # CRITICAL: ensures 1 replica per node (since 1 GPU per node)
+#         ray_actor_options={
+#             "num_gpus": 1,
+#         },
+#     ),
+# )
+
 llm_config = LLMConfig(
     model_loading_config=dict(
         model_id="qwen-base",
         model_source=MODEL_PATH,
     ),
-    lora_config=dict(
-        dynamic_lora_loading_path=ADAPTER_PATH,
-
-        # VERY IMPORTANT: forces constant eviction + cold loads
-        max_num_adapters_per_replica=3,
-    ),
+    # NO lora_config here
     engine_kwargs=dict(
         enable_lora=True,
-        max_loras=3,          # GPU slots (tight)
-        max_cpu_loras=6,      # CPU cache (also limited)
+        max_loras=3,
+        max_cpu_loras=6,
         max_lora_rank=8,
         gpu_memory_utilization=0.6,
         max_model_len=512,
         dtype="float16",
+        # Pass adapters directly as LoRA modules
+        lora_modules=[
+            f"{name}={ADAPTER_PATH}/{name}"
+            for name in os.listdir(ADAPTER_PATH)
+            if os.path.isdir(f"{ADAPTER_PATH}/{name}")
+        ],
     ),
     deployment_config=dict(
         num_replicas=4,
-
-        # Prevent overload (keeps behavior stable for experiment)
         max_ongoing_requests=4,
-
-        # CRITICAL: ensures 1 replica per node (since 1 GPU per node)
         ray_actor_options={
             "num_gpus": 1,
         },
