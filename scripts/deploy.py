@@ -200,8 +200,9 @@ class VLLMDeployment:
         url = f"http://{peer_ip}:8000/internal/gossip"
         try:
             session = await self._ensure_session()
-            await session.post(url, json=msg)
-        except Exception as e:
+            async with session.post(url, json=msg) as resp:
+                await resp.read()
+        except Exception:
             pass
 
     # Adapter State Broadcast Methods
