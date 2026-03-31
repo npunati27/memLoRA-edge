@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import os, time, requests, uuid
+import os, time, requests, uuid, asyncio, json
+from collections import OrderedDict
 import ray
 from ray import serve
 from fastapi import FastAPI
@@ -10,6 +11,15 @@ from starlette.responses import JSONResponse
 HOME         = os.path.expanduser("~")
 MODEL_PATH   = f"{HOME}/model_cache/Qwen2.5-0.5B-Instruct"
 ADAPTER_PATH = f"{HOME}/adapters"
+PEERS_FILE   = os.path.expanduser("~/peers.json")
+
+MAX_GPU_LORA = 3
+MAX_CPU_LORA = 6
+
+def load_peer_config():
+    with open(PEERS_FILE) as f:
+        cfg = json.load(f)
+    return cfg["my_ip"], cfg["peers"]
 
 def get_lora_names():
     return sorted([
@@ -30,17 +40,26 @@ class VLLMDeployment:
         from vllm.engine.arg_utils import AsyncEngineArgs
         from vllm.engine.async_llm_engine import AsyncLLMEngine
 
+        self.my_ip, self.peer_ips = load_peer_config()
         self.lora_names = get_lora_names()
         self.model_id   = "qwen-base"
+        self._ongoing   = 0 
 
+        # DS that is a lru tracker for this nodes gpu cpu state
+
+
+        # DS to keep track of peer states 
+
+        print(f"[vllm] Node: {self.my_ip}")
+        print(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
         print(f"[vllm] Loading model: {MODEL_PATH}")
         print(f"[vllm] LoRA adapters ({len(self.lora_names)}): {self.lora_names}")
 
         engine_args = AsyncEngineArgs(
             model=MODEL_PATH,
             enable_lora=True,
-            max_loras=3,
-            max_cpu_loras=6,
+            max_loras=MAX_GPU_LORA,
+            max_cpu_loras=MAX_CPU_LORA,
             max_lora_rank=8,
             gpu_memory_utilization=0.6,
             max_model_len=512,
@@ -53,6 +72,18 @@ class VLLMDeployment:
         self.engine = AsyncLLMEngine.from_engine_args(engine_args)
         print(f"[vllm] Engine ready.")
 
+
+    # gossip endpoint for state sharing between nodes 
+    @app.post("/internal/gossip")
+    async def receive_gossip(self, request: Request):
+        pass
+
+    # inference endpoint 
+    @app.post("/v1/chat/completions")
+    async def chat_completions(self, request: Request):
+        pass
+
+    # list models and adapters
     @app.get("/v1/models")
     async def list_models(self):
         models = [{"id": self.model_id, "object": "model"}]
@@ -60,82 +91,18 @@ class VLLMDeployment:
             models.append({"id": f"{self.model_id}/{name}", "object": "model"})
         return JSONResponse({"object": "list", "data": models})
 
-    @app.post("/v1/chat/completions")
-    async def chat_completions(self, request: Request):
-        from vllm.lora.request import LoRARequest
-        from vllm.sampling_params import SamplingParams
-
-        body        = await request.json()
-        model       = body.get("model", self.model_id)
-        messages    = body.get("messages", [])
-        max_tokens  = body.get("max_tokens", 256)
-        temperature = body.get("temperature", 0.7)
-
-        lora_request = None
-        if "/" in model:
-            _, adapter_name = model.split("/", 1)
-            if adapter_name not in self.lora_names:
-                return JSONResponse(
-                    {"error": f"Unknown adapter: {adapter_name}"},
-                    status_code=400
-                )
-            lora_request = LoRARequest(
-                lora_name=adapter_name,
-                lora_int_id=abs(hash(adapter_name)) % (2**31),
-                lora_local_path=os.path.join(ADAPTER_PATH, adapter_name),
-            )
-
-        tokenizer = await self.engine.get_tokenizer()
-        prompt = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
-
-        sampling_params = SamplingParams(
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-
-        request_id  = f"chatcmpl-{uuid.uuid4().hex}"
-        final_output = None
-        async for output in self.engine.generate(
-            prompt,
-            sampling_params,
-            request_id,
-            lora_request=lora_request,
-        ):
-            final_output = output
-
-        text = final_output.outputs[0].text
-
-        return JSONResponse({
-            "id": request_id,
-            "object": "chat.completion",
-            "model": model,
-            "choices": [{
-                "index": 0,
-                "message": {"role": "assistant", "content": text},
-                "finish_reason": final_output.outputs[0].finish_reason,
-            }],
-            "usage": {
-                "prompt_tokens": len(final_output.prompt_token_ids),
-                "completion_tokens": len(final_output.outputs[0].token_ids),
-                "total_tokens": len(final_output.prompt_token_ids) + len(final_output.outputs[0].token_ids),
-            }
-        })
-
+    # health check endpoint
     @app.get("/health")
     async def health(self):
-        return JSONResponse({"status": "ok", "adapters": self.lora_names})
+        return JSONResponse({
+            "status":   "ok",
+        })
 
 
 if __name__ == "__main__":
-    ray.init(address="auto")
+    ray.init()
 
-    alive = [n for n in ray.nodes() if n["Alive"]]
     print(f"Cluster resources: {ray.cluster_resources()}")
-    print(f"Nodes alive: {len(alive)}/4")
 
     serve.start(http_options={"host": "0.0.0.0", "port": 8000})
     handle = VLLMDeployment.bind()

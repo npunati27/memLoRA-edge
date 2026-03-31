@@ -19,21 +19,17 @@ esac
 
 echo "==> Setting up node$NODE_IDX (LAN IP: $MY_IP)"
 
-# ── 1. Install deps ───────────────────────────────────────────────────────────
 sudo apt-get update -qq
 sudo apt-get install -y python3-pip python3-venv iproute2 -qq
 
-# Only create venv if it doesn't exist — prevents blowing away installs on re-run
 if [[ ! -d ~/venv ]]; then
     python3 -m venv ~/venv
 fi
 source ~/venv/bin/activate
 
-# Add to bashrc only once
 grep -qxF 'source ~/venv/bin/activate' ~/.bashrc \
     || echo 'source ~/venv/bin/activate' >> ~/.bashrc
 
-# Install torch first so vllm's resolver sees it and doesn't downgrade it
 pip install -q \
     "torch==2.5.1" \
     --index-url https://download.pytorch.org/whl/cu121 \
@@ -48,9 +44,9 @@ pip install -q \
     "boto3" \
     "peft" \
     "aiohttp" \
+    "sortedcontainers" \
     --no-cache-dir
 
-# ── 2. Download model ─────────────────────────────────────────────────────────
 mkdir -p ~/model_cache ~/adapters
 
 python3 - <<'EOF'
@@ -68,7 +64,6 @@ else:
     print("Model exists.")
 EOF
 
-# ── 3. Create LoRA adapters ───────────────────────────────────────────────────
 python3 - <<'EOF'
 import os, torch
 from peft import LoraConfig, get_peft_model, TaskType
@@ -87,16 +82,13 @@ ALL = [
 model_dir = os.path.expanduser("~/model_cache/Qwen2.5-0.5B-Instruct")
 adapter_dir = os.path.expanduser("~/adapters")
 
-# Only load the model if any adapters are missing — saves time on re-runs
 missing = [n for n in ALL if not os.path.exists(os.path.join(adapter_dir, n))]
 if not missing:
     print("All adapters already exist, skipping.")
 else:
     print(f"Creating {len(missing)} missing adapters...")
     model = AutoModelForCausalLM.from_pretrained(
-        model_dir,
-        torch_dtype=torch.float16,
-        device_map="cpu"
+        model_dir, torch_dtype=torch.float16, device_map="cpu"
     )
     cfg = LoraConfig(
         r=8, lora_alpha=16,
@@ -110,40 +102,6 @@ else:
         print(f"  created: {name}")
 EOF
 
-# ── 4. Subset adapters ────────────────────────────────────────────────────────
-python3 - <<EOF
-import os, shutil
-
-ALL = [
-    "crop_corn_disease","crop_wheat_disease","crop_soy_disease",
-    "crop_tomato_disease","crop_cotton_disease","crop_general_health",
-    "pest_aphid","pest_rootworm","pest_spider_mite","pest_caterpillar","pest_general",
-    "soil_nitrogen","soil_phosphorus","soil_moisture","soil_ph",
-    "irrigation_zone_a","irrigation_zone_b","irrigation_zone_c","irrigation_zone_d",
-    "weather_forecast","weather_frost_alert","weather_humidity",
-    "equip_tractor","equip_drone","equip_sensor",
-]
-
-SUB = {
-    0: ["crop_corn_disease","crop_wheat_disease","crop_general_health","pest_aphid","pest_general","soil_nitrogen","soil_moisture","irrigation_zone_a","weather_forecast","equip_tractor"],
-    1: ["crop_soy_disease","crop_cotton_disease","crop_general_health","pest_rootworm","pest_spider_mite","pest_general","soil_ph","irrigation_zone_b","weather_forecast","equip_drone"],
-    2: ["crop_tomato_disease","crop_general_health","pest_caterpillar","soil_phosphorus","soil_moisture","irrigation_zone_c","irrigation_zone_d","weather_frost_alert","weather_humidity","equip_sensor"],
-    3: ["crop_wheat_disease","crop_general_health","pest_general","soil_nitrogen","soil_ph","irrigation_zone_a","irrigation_zone_b","weather_forecast","weather_frost_alert","equip_tractor"],
-}
-
-keep = SUB[$NODE_IDX]
-adapter_dir = os.path.expanduser("~/adapters")
-
-for name in ALL:
-    path = os.path.join(adapter_dir, name)
-    if name not in keep and os.path.exists(path):
-        shutil.rmtree(path)
-        print(f"  removed: {name}")
-
-print(f"Node $NODE_IDX keeping adapters: {keep}")
-EOF
-
-# ── 5. TC NETWORK SHAPING (LAN ONLY) ─────────────────────────────────────────
 LAN_IFACE="enp65s0np0"
 LAN_IP=$(ip -4 addr show "$LAN_IFACE" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
@@ -188,24 +146,27 @@ for dst in 0 1 2 3; do
     CLASS_ID=$((CLASS_ID + 1))
 done
 
-# ── 6. START RAY (LAN ONLY) ───────────────────────────────────────────────────
 ray stop --force 2>/dev/null || true
 sleep 2
 
-if [[ "$NODE_IDX" == "0" ]]; then
-    ray start --head \
-        --node-ip-address="$LAN_IP" \
-        --port=6379 \
-        --dashboard-host=0.0.0.0 \
-        --num-gpus=1 \
-        --num-cpus=32
-    echo "Dashboard (via SSH tunnel): http://localhost:8265"
-else
-    ray start \
-        --address="$NODE0_IP:6379" \
-        --node-ip-address="$LAN_IP" \
-        --num-gpus=1 \
-        --num-cpus=32
-fi
+# every node is its own head 
+ray start --head \
+    --node-ip-address="$LAN_IP" \
+    --port=6379 \
+    --dashboard-host=0.0.0.0 \
+    --num-gpus=1 \
+    --num-cpus=32
 
-echo "==> node$NODE_IDX ready"
+echo "==> node$NODE_IDX ray cluster ready (standalone)"
+
+
+cat > ~/peers.json << PEERS
+{
+    "my_ip":   "$MY_IP",
+    "node_idx": $NODE_IDX,
+    "peers": ["$NODE0_IP", "$NODE1_IP", "$NODE2_IP", "$NODE3_IP"]
+}
+PEERS
+
+echo "==> node$NODE_IDX ready — peers.json written"
+echo "    Run: python3 ~/memLoRA-edge/scripts/deploy.py"
