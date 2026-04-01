@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, time, requests, uuid, asyncio, json, random
+import os, time, requests, uuid, asyncio, json, random, logging
 from collections import OrderedDict
 import ray
 from ray import serve
@@ -12,6 +12,17 @@ from vllm.lora.request import LoRARequest
 
 
 HOME         = os.path.expanduser("~")
+LOG_DIR      = os.path.join(HOME, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(LOG_DIR, "deploy.log")),
+    ],
+)
+logger = logging.getLogger("memlora")
 MODEL_PATH   = f"{HOME}/model_cache/Qwen2.5-0.5B-Instruct"
 ADAPTER_PATH = f"{HOME}/adapters"
 PEERS_FILE   = os.path.expanduser("~/peers.json")
@@ -96,10 +107,10 @@ class VLLMDeployment:
 
         # TODO: LRU tracker for local GPU/CPU adapter state
 
-        print(f"[vllm] Node: {self.my_ip}")
-        print(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
-        print(f"[vllm] Loading model: {MODEL_PATH}")
-        print(f"[vllm] LoRA adapters ({len(self.lora_names)}): {self.lora_names}")
+        logger.info(f"[vllm] Node: {self.my_ip}")
+        logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
+        logger.info(f"[vllm] Loading model: {MODEL_PATH}")
+        logger.info(f"[vllm] LoRA adapters ({len(self.lora_names)}): {self.lora_names}")
 
         engine_args = AsyncEngineArgs(
             model=MODEL_PATH,
@@ -116,7 +127,7 @@ class VLLMDeployment:
         )
 
         self.engine = AsyncLLMEngine.from_engine_args(engine_args)
-        print(f"[vllm] Engine ready.")
+        logger.info(f"[vllm] Engine ready.")
 
         # Start gossip loop now that engine is ready
         self._start_gossip_loop()
@@ -177,10 +188,10 @@ class VLLMDeployment:
                 loop = asyncio.get_event_loop()
                 self._gossip_task = loop.create_task(self._gossip_queue_loop())
                 self._gossip_running = True
-                print(f"[gossip] Started gossip loop for {self.my_ip}")
+                logger.info(f"[gossip] Started gossip loop for {self.my_ip}")
             except RuntimeError:
                 self._gossip_running = False
-                print(f"[gossip] Warning: No event loop available, gossip will start on first request")
+                logger.warning(f"[gossip] No event loop available, gossip will start on first request")
 
     async def _ensure_session(self):
         """Lazily create and return the shared aiohttp session."""
@@ -195,14 +206,14 @@ class VLLMDeployment:
 
     async def _gossip_queue_loop(self):
         """Background task that broadcasts local queue length to all peers every 150ms."""
-        await asyncio.sleep(1)  # Initial delay to let things settle
-        print(f"[gossip] Gossip loop active, broadcasting to {len([p for p in self.peer_ips if p != self.my_ip])} peers")
+        await asyncio.sleep(1)
+        logger.info(f"[gossip] Gossip loop active, broadcasting to {len([p for p in self.peer_ips if p != self.my_ip])} peers")
         
         while self._gossip_running:
             try:
                 await self._broadcast_queue_length()
             except Exception as e:
-                print(f"[gossip] Broadcast error: {e}")
+                logger.error(f"[gossip] Broadcast error: {e}")
             await asyncio.sleep(0.15)
 
     async def _broadcast_queue_length(self):
@@ -573,7 +584,7 @@ class VLLMDeployment:
         if self._gossip_task is None and not self._gossip_running:
             self._gossip_running = True
             self._gossip_task = asyncio.create_task(self._gossip_queue_loop())
-            print(f"[gossip] Started gossip loop lazily on first health check")
+            logger.info(f"[gossip] Started gossip loop lazily on first health check")
         
         return JSONResponse({"status": "ok", "node": self.my_ip, "ongoing": self._ongoing})
 
@@ -597,7 +608,7 @@ class VLLMDeployment:
 if __name__ == "__main__":
     ray.init()
 
-    print(f"Cluster resources: {ray.cluster_resources()}")
+    logger.info(f"Cluster resources: {ray.cluster_resources()}")
 
     #delete old deployment if it exists. 
     try:
@@ -611,17 +622,17 @@ if __name__ == "__main__":
     handle = VLLMDeployment.bind()
     serve.run(handle, name="memlora", route_prefix="/", blocking=False)
 
-    print("\nWaiting for deployment to be ready...")
+    logger.info("Waiting for deployment to be ready...")
     for i in range(60):
         try:
             r = requests.get("http://localhost:8000/health", timeout=5)
             if r.status_code == 200:
-                print(f"\nReady! {r.json()}")
+                logger.info(f"Ready! {r.json()}")
                 break
         except Exception:
             pass
         time.sleep(60)
-        print(f"  waiting... {i+1}/60 (~{(i+1)*10}s elapsed)")
+        logger.info(f"  waiting... {i+1}/60 (~{(i+1)*10}s elapsed)")
     else:
-        print("Did not become ready in time.")
+        logger.error("Did not become ready in time.")
         exit(1)
