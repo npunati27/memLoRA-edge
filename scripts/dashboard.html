@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>memLoRA Cluster Dashboard</title>
+<style>
+  :root {
+    --bg: #0f111a;
+    --surface: #1a1d2e;
+    --surface2: #232738;
+    --border: #2e3348;
+    --text: #c9d1d9;
+    --text-dim: #7a8299;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  header h1 span { color: var(--accent); }
+  .meta { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+  .meta .dot {
+    display: inline-block; width: 7px; height: 7px;
+    border-radius: 50%; margin-right: 5px; vertical-align: middle;
+  }
+  .meta .dot.ok { background: var(--green); }
+  .meta .dot.err { background: var(--red); }
+  .meta .dot.warn { background: var(--yellow); }
+
+  main { padding: 20px 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 24px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .card-header h3 { font-size: 14px; font-weight: 600; }
+  .badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge.ok { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge.err { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge.self { background: rgba(88,166,255,0.15); color: var(--accent); }
+
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; font-size: 13px;
+  }
+  .stat-row .label { color: var(--text-dim); }
+  .stat-row .value { font-family: var(--mono); font-size: 13px; }
+
+  .queue-bar-wrap {
+    height: 6px; background: var(--surface2); border-radius: 3px;
+    margin-top: 4px; overflow: hidden;
+  }
+  .queue-bar {
+    height: 100%; border-radius: 3px; transition: width 0.4s ease;
+  }
+  .queue-bar.low { background: var(--green); }
+  .queue-bar.med { background: var(--yellow); }
+  .queue-bar.high { background: var(--red); }
+
+  .section-title {
+    font-size: 13px; font-weight: 600; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    font-family: var(--mono);
+  }
+  table th {
+    text-align: left; padding: 8px 10px; color: var(--text-dim);
+    font-weight: 500; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+  }
+  table td {
+    padding: 7px 10px; border-bottom: 1px solid var(--border);
+  }
+  table tr:last-child td { border-bottom: none; }
+  table .tier-gpu { color: var(--green); }
+  table .tier-cpu { color: var(--yellow); }
+  table .tier-disk { color: var(--text-dim); }
+
+  .log-section { margin-top: 24px; }
+  .log-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .log-tab {
+    padding: 8px 16px; font-size: 12px; font-family: var(--mono);
+    cursor: pointer; border: 1px solid transparent;
+    border-bottom: none; border-radius: 6px 6px 0 0;
+    color: var(--text-dim); background: transparent;
+    transition: all 0.15s;
+  }
+  .log-tab:hover { color: var(--text); }
+  .log-tab.active {
+    color: var(--text); background: var(--surface);
+    border-color: var(--border);
+  }
+  .log-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    height: 320px;
+    overflow-y: auto;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  .log-panel::-webkit-scrollbar { width: 6px; }
+  .log-panel::-webkit-scrollbar-track { background: transparent; }
+  .log-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .log-line { white-space: pre-wrap; word-break: break-all; }
+  .log-line .ts { color: var(--text-dim); }
+  .log-line .lvl-error { color: var(--red); }
+  .log-line .lvl-warning { color: var(--yellow); }
+  .log-line .lvl-info { color: var(--text-dim); }
+  .log-line .tag { color: var(--purple); }
+
+  .error-banner {
+    background: rgba(248,81,73,0.1);
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: 6px; padding: 12px 16px;
+    font-size: 13px; color: var(--red);
+    margin-bottom: 16px;
+  }
+
+  .empty { color: var(--text-dim); font-style: italic; font-size: 13px; padding: 20px 0; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>memLoRA</span> Cluster Dashboard</h1>
+  <div class="meta">
+    <span class="dot ok" id="conn-dot"></span>
+    <span id="status-text">connecting...</span>
+    &nbsp;&mdash;&nbsp;
+    source: <span id="source-node">-</span>
+    &nbsp;&mdash;&nbsp;
+    updated: <span id="last-update">-</span>
+  </div>
+</header>
+
+<main>
+  <div id="error-banner" class="error-banner" style="display:none"></div>
+
+  <div class="section-title">Nodes</div>
+  <div class="grid" id="node-grid"></div>
+
+  <div class="card" style="margin-bottom: 24px">
+    <div class="section-title" style="margin-bottom:8px">Queue Lengths (Gossip View)</div>
+    <table id="queue-table">
+      <thead><tr><th>Observer</th><th>Self</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="queue-empty" style="display:none">No queue data yet</div>
+  </div>
+
+  <div class="card" style="margin-bottom: 24px">
+    <div class="section-title" style="margin-bottom:8px">Adapter State</div>
+    <table id="adapter-table">
+      <thead><tr><th>Adapter</th><th>GPU</th><th>CPU</th><th>Disk</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="adapter-empty" style="display:none">No adapter state gossiped yet</div>
+  </div>
+
+  <div class="log-section">
+    <div class="section-title">Logs</div>
+    <div class="log-tabs" id="log-tabs"></div>
+    <div class="log-panel" id="log-panel"></div>
+  </div>
+</main>
+
+<script>
+const BASE = window.location.origin || 'http://localhost:5000';
+const POLL_MS = 2000;
+
+let activeLogTab = null;
+let logAutoScroll = true;
+let lastData = null;
+
+function $(sel) { return document.querySelector(sel); }
+
+function shortIp(ip) {
+  if (!ip) return '-';
+  const parts = ip.split('.');
+  return parts[parts.length - 1];
+}
+
+function queueClass(q, max) {
+  if (max === 0) max = 8;
+  const ratio = q / max;
+  if (ratio < 0.4) return 'low';
+  if (ratio < 0.75) return 'med';
+  return 'high';
+}
+
+function colorizeLog(line) {
+  let html = line
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  html = html.replace(
+    /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+)/,
+    '<span class="ts">$1</span>'
+  );
+  html = html.replace(/ ERROR /,   ' <span class="lvl-error">ERROR</span> ');
+  html = html.replace(/ WARNING /, ' <span class="lvl-warning">WARNING</span> ');
+  html = html.replace(/ INFO /,    ' <span class="lvl-info">INFO</span> ');
+  html = html.replace(
+    /\[(vllm|gossip|inference|forward|endpoint|parse|routing|e2e)\]/g,
+    '<span class="tag">[$1]</span>'
+  );
+  return html;
+}
+
+function renderNodes(nodes) {
+  const grid = $('#node-grid');
+  const sortedIps = Object.keys(nodes).sort();
+
+  grid.innerHTML = sortedIps.map(ip => {
+    const n = nodes[ip];
+    const ok = n.status === 'ok';
+    const q = n.local_queue != null ? n.local_queue : '?';
+    const maxQ = 8;
+    const pct = ok ? Math.min(100, (q / maxQ) * 100) : 0;
+    const isSelf = ip === lastData.source_node;
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <h3>${ip}</h3>
+          <div>
+            ${isSelf ? '<span class="badge self">source</span> ' : ''}
+            <span class="badge ${ok ? 'ok' : 'err'}">${ok ? 'online' : 'down'}</span>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span class="label">Queue</span>
+          <span class="value">${q} / ${maxQ}</span>
+        </div>
+        <div class="queue-bar-wrap">
+          <div class="queue-bar ${queueClass(q, maxQ)}" style="width:${pct}%"></div>
+        </div>
+        <div class="stat-row">
+          <span class="label">Gossip</span>
+          <span class="value">${ok ? (n.gossip_running ? 'active' : 'inactive') : '-'}</span>
+        </div>
+        ${n.error ? `<div class="stat-row"><span class="label" style="color:var(--red)">${n.error}</span></div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function renderQueueTable(nodes) {
+  const sortedIps = Object.keys(nodes).sort();
+  const thead = $('#queue-table thead tr');
+  const tbody = $('#queue-table tbody');
+  const empty = $('#queue-empty');
+
+  if (sortedIps.length === 0) { empty.style.display = ''; tbody.innerHTML = ''; return; }
+  empty.style.display = 'none';
+
+  thead.innerHTML = '<th>Observer \\ Target</th><th>Self</th>' +
+    sortedIps.map(ip => `<th>.${shortIp(ip)}</th>`).join('');
+
+  tbody.innerHTML = sortedIps.map(ip => {
+    const n = nodes[ip];
+    const pq = n.peer_queues || {};
+    return `<tr>
+      <td>${ip}</td>
+      <td>${n.local_queue != null ? n.local_queue : '?'}</td>
+      ${sortedIps.map(tip => {
+        if (tip === ip) return `<td style="color:var(--text-dim)">-</td>`;
+        const v = pq[tip];
+        return `<td>${v != null ? v : '?'}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+}
+
+function renderAdapterTable(nodes) {
+  const tbody = $('#adapter-table tbody');
+  const empty = $('#adapter-empty');
+
+  const merged = {};
+  for (const ip of Object.keys(nodes)) {
+    const st = nodes[ip].adapter_state || {};
+    for (const [adapter, tiers] of Object.entries(st)) {
+      if (!merged[adapter]) merged[adapter] = { gpu: new Set(), cpu: new Set(), disk: new Set() };
+      for (const t of ['gpu', 'cpu', 'disk']) {
+        if (tiers[t]) tiers[t].forEach(n => merged[adapter][t].add(n));
+      }
+    }
+  }
+
+  const adapters = Object.keys(merged).sort();
+  if (adapters.length === 0) { empty.style.display = ''; tbody.innerHTML = ''; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = adapters.map(a => {
+    const t = merged[a];
+    return `<tr>
+      <td>${a}</td>
+      <td class="tier-gpu">${[...t.gpu].map(shortIp).join(', ') || '-'}</td>
+      <td class="tier-cpu">${[...t.cpu].map(shortIp).join(', ') || '-'}</td>
+      <td class="tier-disk">${[...t.disk].map(shortIp).join(', ') || '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLogs(nodes) {
+  const tabs = $('#log-tabs');
+  const panel = $('#log-panel');
+  const sortedIps = Object.keys(nodes).sort();
+
+  if (!activeLogTab && sortedIps.length) activeLogTab = sortedIps[0];
+
+  tabs.innerHTML = sortedIps.map(ip =>
+    `<div class="log-tab ${ip === activeLogTab ? 'active' : ''}" data-ip="${ip}">${ip}</div>`
+  ).join('');
+
+  tabs.querySelectorAll('.log-tab').forEach(tab => {
+    tab.onclick = () => {
+      activeLogTab = tab.dataset.ip;
+      logAutoScroll = true;
+      renderLogs(lastData.nodes);
+    };
+  });
+
+  const n = nodes[activeLogTab];
+  const lines = (n && n.logs) || [];
+  if (lines.length === 0) {
+    panel.innerHTML = '<div class="empty">No logs available</div>';
+    return;
+  }
+
+  panel.innerHTML = lines.map(l =>
+    `<div class="log-line">${colorizeLog(l)}</div>`
+  ).join('');
+
+  if (logAutoScroll) panel.scrollTop = panel.scrollHeight;
+}
+
+async function poll() {
+  const dot = $('#conn-dot');
+  const statusText = $('#status-text');
+  const banner = $('#error-banner');
+  const lastUpdateEl = $('#last-update');
+  const sourceEl = $('#source-node');
+
+  try {
+    const resp = await fetch(`${BASE}/internal/cluster`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    lastData = data;
+
+    dot.className = 'dot ok';
+    statusText.textContent = 'connected';
+    banner.style.display = 'none';
+    sourceEl.textContent = data.source_node;
+    lastUpdateEl.textContent = new Date(data.ts * 1000).toLocaleTimeString();
+
+    renderNodes(data.nodes);
+    renderQueueTable(data.nodes);
+    renderAdapterTable(data.nodes);
+    renderLogs(data.nodes);
+  } catch (e) {
+    dot.className = 'dot err';
+    statusText.textContent = 'disconnected';
+    banner.style.display = '';
+    banner.textContent = `Cannot reach ${BASE}/internal/cluster \u2014 ${e.message}`;
+  }
+}
+
+// Detect manual scroll in logs
+$('#log-panel').addEventListener('scroll', function() {
+  const el = this;
+  logAutoScroll = (el.scrollHeight - el.scrollTop - el.clientHeight) < 30;
+});
+
+poll();
+setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>
