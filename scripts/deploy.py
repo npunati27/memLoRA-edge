@@ -68,7 +68,10 @@ class MetricsLogger:
             self._file.close()
 
 
+from starlette.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @serve.deployment(
     num_replicas=1,
