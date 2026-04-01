@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, time, requests, uuid, asyncio, json
+import os, time, requests, uuid, asyncio, json, random, logging, traceback
 from collections import OrderedDict
 import ray
 from ray import serve
@@ -10,7 +10,19 @@ from starlette.responses import JSONResponse
 from vllm import SamplingParams
 from vllm.lora.request import LoRARequest
 
+
 HOME         = os.path.expanduser("~")
+LOG_DIR      = os.path.join(HOME, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(LOG_DIR, "deploy.log")),
+    ],
+)
+logger = logging.getLogger("memlora")
 MODEL_PATH   = f"{HOME}/model_cache/Qwen2.5-0.5B-Instruct"
 ADAPTER_PATH = f"{HOME}/adapters"
 PEERS_FILE   = os.path.expanduser("~/peers.json")
@@ -95,10 +107,10 @@ class VLLMDeployment:
 
         # TODO: LRU tracker for local GPU/CPU adapter state
 
-        print(f"[vllm] Node: {self.my_ip}")
-        print(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
-        print(f"[vllm] Loading model: {MODEL_PATH}")
-        print(f"[vllm] LoRA adapters ({len(self.lora_names)}): {self.lora_names}")
+        logger.info(f"[vllm] Node: {self.my_ip}")
+        logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
+        logger.info(f"[vllm] Loading model: {MODEL_PATH}")
+        logger.info(f"[vllm] LoRA adapters ({len(self.lora_names)}): {self.lora_names}")
 
         engine_args = AsyncEngineArgs(
             model=MODEL_PATH,
@@ -115,16 +127,214 @@ class VLLMDeployment:
         )
 
         self.engine = AsyncLLMEngine.from_engine_args(engine_args)
-        print(f"[vllm] Engine ready.")
+        logger.info(f"[vllm] Engine ready.")
+
+        # Start gossip loop now that engine is ready
+        self._start_gossip_loop()
+
+
+    def _get_known_queue_lengths(self) -> dict[str, int]:
+        queues = {self.my_ip: self._ongoing}
+
+        for ip in self.peer_ips:
+            if ip != self.my_ip:
+                queues[ip] = self._peer_queue_lengths.get(ip, 0)
+
+        return queues
 
         # Start gossip loop now that engine is ready
         self._start_gossip_loop()
 
     # Routing Logic 
 
-    def _choose_target_node(self, adapter_name: str, source_ip: str) -> str:
+    async def _choose_target_node(self, adapter_name: str, source_ip: str) -> str:
         # TODO: use peer state + LRU tracker to pick best node
-        return self.my_ip
+        all_nodes = [self.my_ip] + [ip for ip in self.peer_ips if ip != self.my_ip]
+
+        if len(all_nodes) == 1:
+            return self.my_ip
+
+        sampled = random.sample(all_nodes, 2)
+        queues = self._get_known_queue_lengths()
+
+        n1, n2 = sampled
+        q1 = queues.get(n1, 0)
+        q2 = queues.get(n2, 0)
+
+        if q1 < q2:
+            chosen = n1
+        elif q2 < q1:
+            chosen = n2
+        else:
+            chosen = random.choice([n1, n2])
+
+        self.metrics.log(
+            "baseline_p2c_choice",
+            adapter_name=adapter_name,
+            source_ip=source_ip,
+            sampled_nodes=sampled,
+            sampled_queue_lengths={
+                n1: q1,
+                n2: q2,
+            },
+            chosen_node=chosen,
+        )
+
+        return chosen
+
+    # Gossip Lifecycle Methods
+
+    def _start_gossip_loop(self):
+        """Start the background gossip loop. Safe to call from __init__ after engine ready."""
+        if self._gossip_task is None:
+            try:
+                loop = asyncio.get_event_loop()
+                self._gossip_task = loop.create_task(self._gossip_queue_loop())
+                self._gossip_running = True
+                logger.info(f"[gossip] Started gossip loop for {self.my_ip}")
+            except RuntimeError:
+                self._gossip_running = False
+                logger.warning(f"[gossip] No event loop available, gossip will start on first request")
+
+    async def _ensure_session(self):
+        """Lazily create and return the shared aiohttp session."""
+        if self._aiohttp_session is None or self._aiohttp_session.closed:
+            import aiohttp
+            self._aiohttp_session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=2)
+            )
+        return self._aiohttp_session
+
+    # Queue Length Gossip Methods
+
+    async def _gossip_queue_loop(self):
+        """Background task that broadcasts local queue length to all peers every 150ms."""
+        await asyncio.sleep(1)
+        logger.info(f"[gossip] Gossip loop active, broadcasting to {len([p for p in self.peer_ips if p != self.my_ip])} peers")
+        
+        while self._gossip_running:
+            try:
+                await self._broadcast_queue_length()
+            except Exception as e:
+                logger.error(f"[gossip] Broadcast error: {e}")
+            await asyncio.sleep(0.15)
+
+    async def _broadcast_queue_length(self):
+        """Send current queue length to all peers."""
+        msg = {
+            "type": "queue_length",
+            "node": self.my_ip,
+            "queue_len": self._ongoing,
+            "ts": time.time()
+        }
+        await self._broadcast_to_peers(msg)
+
+    def _handle_queue_gossip(self, body: dict):
+        """Process incoming queue length gossip from a peer."""
+        node = body.get("node")
+        queue_len = body.get("queue_len", 0)
+        ts = body.get("ts", 0)
+        
+        if node and node != self.my_ip and node in self._peer_queue_lengths:
+            if ts > self._peer_queue_timestamps.get(node, 0):
+                self._peer_queue_lengths[node] = queue_len
+                self._peer_queue_timestamps[node] = ts
+
+    # Broadcast Helper Methods
+
+    async def _broadcast_to_peers(self, msg: dict):
+        """Send a message to all peers concurrently."""
+        tasks = []
+        for peer in self.peer_ips:
+            if peer != self.my_ip:
+                tasks.append(self._send_gossip(peer, msg))
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _send_gossip(self, peer_ip: str, msg: dict):
+        """Send a gossip message to a single peer."""
+        url = f"http://{peer_ip}:8000/internal/gossip"
+        try:
+            session = await self._ensure_session()
+            async with session.post(url, json=msg) as resp:
+                await resp.read()
+        except Exception:
+            pass
+
+    # Adapter State Broadcast Methods
+
+    async def _broadcast_state_change(self, adapter_name: str, old_tier: str, new_tier: str):
+        """Broadcast an adapter tier change to all peers immediately."""
+        msg = {
+            "type": "adapter_state",
+            "node": self.my_ip,
+            "adapter": adapter_name,
+            "old_tier": old_tier,
+            "new_tier": new_tier,
+            "ts": time.time()
+        }
+        await self._broadcast_to_peers(msg)
+
+    def _handle_adapter_state_gossip(self, body: dict):
+        """Process incoming adapter state change from a peer."""
+        node = body.get("node")
+        adapter = body.get("adapter")
+        old_tier = body.get("old_tier")
+        new_tier = body.get("new_tier")
+        ts = body.get("ts", 0)
+        
+        if not all([node, adapter, new_tier]) or node == self.my_ip:
+            return
+        
+        key = (adapter, node)
+        if ts <= self._adapter_state_timestamps.get(key, 0):
+            return
+        self._adapter_state_timestamps[key] = ts
+        
+        if adapter not in self._peer_adapter_state:
+            self._peer_adapter_state[adapter] = {
+                "gpu": set(),
+                "cpu": set(),
+                "disk": set()
+            }
+        
+        tiers = self._peer_adapter_state[adapter]
+        # Remove node from ALL tiers first to prevent multi-tier corruption
+        for tier_set in tiers.values():
+            tier_set.discard(node)
+        if new_tier in tiers:
+            tiers[new_tier].add(node)
+
+    # RTT-Based Queue Query Methods
+
+    async def _query_peer_queue(self, peer_ip: str) -> int:
+        """Query a peer's queue length directly via HTTP (RTT approach)."""
+        import aiohttp
+        url = f"http://{peer_ip}:8000/internal/queue"
+        try:
+            session = await self._ensure_session()
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=1)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    queue_len = data.get("queue_len", 0)
+                    ts = data.get("ts", time.time())
+                    self._peer_queue_lengths[peer_ip] = queue_len
+                    self._peer_queue_timestamps[peer_ip] = ts
+                    return queue_len
+        except Exception as e:
+            pass
+        return self._peer_queue_lengths.get(peer_ip, 0)
+
+    async def _query_all_peer_queues(self) -> dict[str, int]:
+        """Query all peers' queue lengths concurrently."""
+        tasks = {}
+        for peer in self.peer_ips:
+            if peer != self.my_ip:
+                tasks[peer] = self._query_peer_queue(peer)
+        if tasks:
+            results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+            return {ip: (r if isinstance(r, int) else 0) for ip, r in zip(tasks.keys(), results)}
+        return {}
 
     # Gossip Lifecycle Methods
 
@@ -330,12 +540,21 @@ class VLLMDeployment:
 
     #extract and parse the inference request, returning a dict with all relevant info
     async def _parse_inference_request(self, request: Request) -> dict:
-        body = await request.json()
+        try:
+            body = await request.json()
+        except Exception as e:
+            logger.error(f"[parse] Failed to parse request body as JSON: {e}")
+            raise ValueError(f"Invalid JSON body: {e}")
+        
         model_name = body.get("model")
         base_model, adapter_name = self._parse_model_and_adapter(model_name)
         prompt_info = self._extract_prompt(body)
+        request_id = body.get("request_id", str(uuid.uuid4()))
+        
+        logger.info(f"[parse] request_id={request_id} model={model_name} adapter={adapter_name}")
+        
         return {
-            "request_id":   body.get("request_id", str(uuid.uuid4())),
+            "request_id":   request_id,
             "model":        model_name,
             "base_model":   base_model,
             "adapter_name": adapter_name,
@@ -363,10 +582,14 @@ class VLLMDeployment:
 
         lora_request = None
         if adapter_name is not None:
+            lora_path = os.path.join(ADAPTER_PATH, adapter_name)
+            if not os.path.isdir(lora_path):
+                logger.error(f"[inference] request_id={request_id} adapter path not found: {lora_path}")
+                return JSONResponse({"error": f"Adapter '{adapter_name}' not found at {lora_path}"}, status_code=400)
             lora_request = LoRARequest(
                 lora_name=adapter_name,
                 lora_int_id=abs(hash(adapter_name)) % (2**31),
-                lora_local_path=os.path.join(ADAPTER_PATH, adapter_name),
+                lora_local_path=lora_path,
             )
 
         self._ongoing += 1
@@ -383,6 +606,7 @@ class VLLMDeployment:
                 final_output = output
 
             if final_output is None or not final_output.outputs:
+                logger.error(f"[inference] request_id={request_id} engine returned no output (final_output={final_output})")
                 return JSONResponse({"error": "No output generated"}, status_code=500)
 
             tokens_generated = len(final_output.outputs[0].token_ids) if hasattr(final_output.outputs[0], 'token_ids') else 0
@@ -400,6 +624,7 @@ class VLLMDeployment:
                 "adapter_name": adapter_name,
             })
         except Exception as e:
+            logger.error(f"[inference] FAILED request_id={request_id} adapter={adapter_name} error={e}\n{traceback.format_exc()}")
             return JSONResponse({"error": f"Inference failed: {str(e)}"}, status_code=500)
         finally:
             inf_time_ms = (time.perf_counter() - inf_start) * 1000
@@ -427,6 +652,7 @@ class VLLMDeployment:
                 success = (resp.status == 200)
                 return JSONResponse(content=await resp.json(), status_code=resp.status)
         except Exception as e:
+            logger.error(f"[forward] FAILED request_id={request_id} target={target_ip} error={e}\n{traceback.format_exc()}")
             return JSONResponse({"error": f"Forward to {target_ip} failed: {str(e)}"}, status_code=502)
         finally:
             fwd_time_ms = (time.perf_counter() - fwd_start) * 1000
@@ -463,9 +689,11 @@ class VLLMDeployment:
     # internal endpoint for forwarded requests from other nodes in the cluster. 
     @app.post("/internal/chat/completions")
     async def internal_chat_completions(self, request: Request):
+        logger.info(f"[endpoint] /internal/chat/completions from {request.client.host if request.client else 'unknown'}")
         try:
             parsed = await self._parse_inference_request(request)
         except ValueError as e:
+            logger.error(f"[endpoint] /internal/chat/completions parse error: {e}")
             return JSONResponse({"error": str(e)}, status_code=400)
         return await self._serve_local_chat_request(parsed)
 
@@ -477,6 +705,7 @@ class VLLMDeployment:
         try:
             parsed = await self._parse_inference_request(request)
         except (ValueError, Exception) as e:
+            logger.error(f"[endpoint] /v1/chat/completions parse error: {e}\n{traceback.format_exc()}")
             return JSONResponse({"error": str(e)}, status_code=400)
 
         request_id = parsed["request_id"]
@@ -555,31 +784,33 @@ class VLLMDeployment:
 if __name__ == "__main__":
     ray.init()
 
-    print(f"Cluster resources: {ray.cluster_resources()}")
+    logger.info(f"Cluster resources: {ray.cluster_resources()}")
 
     #delete old deployment if it exists. 
     try:
-        serve.start()
+        serve.start(http_options={"host": "0.0.0.0", "port": 8000})
         serve.delete("memlora")
         time.sleep(2)
     except Exception:
         pass
 
+    serve.shutdown()
+    time.sleep(2)
     serve.start(http_options={"host": "0.0.0.0", "port": 8000})
     handle = VLLMDeployment.bind()
     serve.run(handle, name="memlora", route_prefix="/", blocking=False)
 
-    print("\nWaiting for deployment to be ready...")
+    logger.info("Waiting for deployment to be ready...")
     for i in range(60):
         try:
             r = requests.get("http://localhost:8000/health", timeout=5)
             if r.status_code == 200:
-                print(f"\nReady! {r.json()}")
+                logger.info(f"Ready! {r.json()}")
                 break
         except Exception:
             pass
         time.sleep(60)
-        print(f"  waiting... {i+1}/60 (~{(i+1)*10}s elapsed)")
+        logger.info(f"  waiting... {i+1}/60 (~{(i+1)*10}s elapsed)")
     else:
-        print("Did not become ready in time.")
+        logger.error("Did not become ready in time.")
         exit(1)
