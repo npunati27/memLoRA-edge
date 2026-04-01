@@ -142,6 +142,9 @@ class VLLMDeployment:
 
         return queues
 
+        # Start gossip loop now that engine is ready
+        self._start_gossip_loop()
+
     # Routing Logic 
 
     async def _choose_target_node(self, adapter_name: str, source_ip: str) -> str:
@@ -214,6 +217,160 @@ class VLLMDeployment:
                 await self._broadcast_queue_length()
             except Exception as e:
                 logger.error(f"[gossip] Broadcast error: {e}")
+            await asyncio.sleep(0.15)
+
+    async def _broadcast_queue_length(self):
+        """Send current queue length to all peers."""
+        msg = {
+            "type": "queue_length",
+            "node": self.my_ip,
+            "queue_len": self._ongoing,
+            "ts": time.time()
+        }
+        await self._broadcast_to_peers(msg)
+
+    def _handle_queue_gossip(self, body: dict):
+        """Process incoming queue length gossip from a peer."""
+        node = body.get("node")
+        queue_len = body.get("queue_len", 0)
+        ts = body.get("ts", 0)
+        
+        if node and node != self.my_ip and node in self._peer_queue_lengths:
+            if ts > self._peer_queue_timestamps.get(node, 0):
+                self._peer_queue_lengths[node] = queue_len
+                self._peer_queue_timestamps[node] = ts
+
+    # Broadcast Helper Methods
+
+    async def _broadcast_to_peers(self, msg: dict):
+        """Send a message to all peers concurrently."""
+        tasks = []
+        for peer in self.peer_ips:
+            if peer != self.my_ip:
+                tasks.append(self._send_gossip(peer, msg))
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _send_gossip(self, peer_ip: str, msg: dict):
+        """Send a gossip message to a single peer."""
+        url = f"http://{peer_ip}:8000/internal/gossip"
+        try:
+            session = await self._ensure_session()
+            async with session.post(url, json=msg) as resp:
+                await resp.read()
+        except Exception:
+            pass
+
+    # Adapter State Broadcast Methods
+
+    async def _broadcast_state_change(self, adapter_name: str, old_tier: str, new_tier: str):
+        """Broadcast an adapter tier change to all peers immediately."""
+        msg = {
+            "type": "adapter_state",
+            "node": self.my_ip,
+            "adapter": adapter_name,
+            "old_tier": old_tier,
+            "new_tier": new_tier,
+            "ts": time.time()
+        }
+        await self._broadcast_to_peers(msg)
+
+    def _handle_adapter_state_gossip(self, body: dict):
+        """Process incoming adapter state change from a peer."""
+        node = body.get("node")
+        adapter = body.get("adapter")
+        old_tier = body.get("old_tier")
+        new_tier = body.get("new_tier")
+        ts = body.get("ts", 0)
+        
+        if not all([node, adapter, new_tier]) or node == self.my_ip:
+            return
+        
+        key = (adapter, node)
+        if ts <= self._adapter_state_timestamps.get(key, 0):
+            return
+        self._adapter_state_timestamps[key] = ts
+        
+        if adapter not in self._peer_adapter_state:
+            self._peer_adapter_state[adapter] = {
+                "gpu": set(),
+                "cpu": set(),
+                "disk": set()
+            }
+        
+        tiers = self._peer_adapter_state[adapter]
+        # Remove node from ALL tiers first to prevent multi-tier corruption
+        for tier_set in tiers.values():
+            tier_set.discard(node)
+        if new_tier in tiers:
+            tiers[new_tier].add(node)
+
+    # RTT-Based Queue Query Methods
+
+    async def _query_peer_queue(self, peer_ip: str) -> int:
+        """Query a peer's queue length directly via HTTP (RTT approach)."""
+        import aiohttp
+        url = f"http://{peer_ip}:8000/internal/queue"
+        try:
+            session = await self._ensure_session()
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=1)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    queue_len = data.get("queue_len", 0)
+                    ts = data.get("ts", time.time())
+                    self._peer_queue_lengths[peer_ip] = queue_len
+                    self._peer_queue_timestamps[peer_ip] = ts
+                    return queue_len
+        except Exception as e:
+            pass
+        return self._peer_queue_lengths.get(peer_ip, 0)
+
+    async def _query_all_peer_queues(self) -> dict[str, int]:
+        """Query all peers' queue lengths concurrently."""
+        tasks = {}
+        for peer in self.peer_ips:
+            if peer != self.my_ip:
+                tasks[peer] = self._query_peer_queue(peer)
+        if tasks:
+            results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+            return {ip: (r if isinstance(r, int) else 0) for ip, r in zip(tasks.keys(), results)}
+        return {}
+
+    # Gossip Lifecycle Methods
+
+    def _start_gossip_loop(self):
+        """Start the background gossip loop. Safe to call from __init__ after engine ready."""
+        if self._gossip_task is None:
+            try:
+                loop = asyncio.get_event_loop()
+                self._gossip_task = loop.create_task(self._gossip_queue_loop())
+                self._gossip_running = True
+                print(f"[gossip] Started gossip loop for {self.my_ip}")
+            except RuntimeError:
+                self._gossip_running = False
+                print(f"[gossip] Warning: No event loop available, gossip will start on first request")
+
+    async def _ensure_session(self):
+        """Lazily create and return the shared aiohttp session."""
+        if self._aiohttp_session is None or self._aiohttp_session.closed:
+            import aiohttp
+            self._aiohttp_session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=2)
+            )
+        return self._aiohttp_session
+
+    # Queue Length Gossip Methods
+
+    async def _gossip_queue_loop(self):
+        """Background task that broadcasts local queue length to all peers every 150ms."""
+        await asyncio.sleep(1)  # Initial delay to let things settle
+        print(f"[gossip] Gossip loop active, broadcasting to {len([p for p in self.peer_ips if p != self.my_ip])} peers")
+        
+        while self._gossip_running:
+            try:
+                await self._broadcast_queue_length()
+            except Exception as e:
+                print(f"[gossip] Broadcast error: {e}")
             await asyncio.sleep(0.15)
 
     async def _broadcast_queue_length(self):
@@ -417,8 +574,6 @@ class VLLMDeployment:
         adapter_name = parsed["adapter_name"]
         request_id   = parsed["request_id"]
 
-        logger.info(f"[inference] START request_id={request_id} adapter={adapter_name} ongoing={self._ongoing}")
-
         sampling_params = SamplingParams(
             max_tokens=body.get("max_tokens", 64),
             temperature=body.get("temperature", 0.0),
@@ -455,7 +610,6 @@ class VLLMDeployment:
                 return JSONResponse({"error": "No output generated"}, status_code=500)
 
             tokens_generated = len(final_output.outputs[0].token_ids) if hasattr(final_output.outputs[0], 'token_ids') else 0
-            logger.info(f"[inference] OK request_id={request_id} tokens={tokens_generated}")
 
             return JSONResponse({
                 "id":           request_id,
@@ -487,7 +641,6 @@ class VLLMDeployment:
     async def _forward_chat_request(self, target_ip: str, body: dict, request_id: str = None) -> JSONResponse:
         import aiohttp
         url = f"http://{target_ip}:8000/internal/chat/completions"
-        logger.info(f"[forward] START request_id={request_id} target={target_ip}")
         fwd_start = time.perf_counter()
         success = False
         try:
@@ -497,12 +650,7 @@ class VLLMDeployment:
                     timeout=aiohttp.ClientTimeout(total=180),
                 )
                 success = (resp.status == 200)
-                resp_body = await resp.json()
-                if not success:
-                    logger.error(f"[forward] request_id={request_id} target={target_ip} returned status={resp.status} body={resp_body}")
-                else:
-                    logger.info(f"[forward] OK request_id={request_id} target={target_ip} status={resp.status}")
-                return JSONResponse(content=resp_body, status_code=resp.status)
+                return JSONResponse(content=await resp.json(), status_code=resp.status)
         except Exception as e:
             logger.error(f"[forward] FAILED request_id={request_id} target={target_ip} error={e}\n{traceback.format_exc()}")
             return JSONResponse({"error": f"Forward to {target_ip} failed: {str(e)}"}, status_code=502)
@@ -553,7 +701,6 @@ class VLLMDeployment:
     @app.post("/v1/chat/completions")
     async def chat_completions(self, request: Request):
         e2e_start = time.perf_counter()
-        logger.info(f"[endpoint] /v1/chat/completions from {request.client.host if request.client else 'unknown'}")
         
         try:
             parsed = await self._parse_inference_request(request)
@@ -565,12 +712,11 @@ class VLLMDeployment:
         adapter_name = parsed["adapter_name"]
 
         routing_start = time.perf_counter()
-        target_ip = await self._choose_target_node(adapter_name, parsed["client_ip"])
+        target_ip = self._choose_target_node(adapter_name, parsed["client_ip"])
         routing_time_ms = (time.perf_counter() - routing_start) * 1000
         
         is_local = (target_ip == self.my_ip)
         reason = "local" if is_local else "forwarded"
-        logger.info(f"[routing] request_id={request_id} adapter={adapter_name} target={target_ip} reason={reason}")
         self.metrics.log(
             "routing_decision",
             request_id=request_id,
@@ -590,7 +736,6 @@ class VLLMDeployment:
             response = await self._forward_chat_request(target_ip, body, request_id)
 
         e2e_time_ms = (time.perf_counter() - e2e_start) * 1000
-        logger.info(f"[e2e] request_id={request_id} status={response.status_code} total_ms={e2e_time_ms:.1f} forwarded={not is_local} served_by={target_ip}")
         self.metrics.log(
             "e2e_latency",
             request_id=request_id,
@@ -615,7 +760,7 @@ class VLLMDeployment:
         if self._gossip_task is None and not self._gossip_running:
             self._gossip_running = True
             self._gossip_task = asyncio.create_task(self._gossip_queue_loop())
-            logger.info(f"[gossip] Started gossip loop lazily on first health check")
+            print(f"[gossip] Started gossip loop lazily on first health check")
         
         return JSONResponse({"status": "ok", "node": self.my_ip, "ongoing": self._ongoing})
 
