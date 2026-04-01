@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, time, requests, uuid, asyncio, json, random, logging
+import os, time, requests, uuid, asyncio, json, random, logging, traceback
 from collections import OrderedDict
 import ray
 from ray import serve
@@ -383,12 +383,21 @@ class VLLMDeployment:
 
     #extract and parse the inference request, returning a dict with all relevant info
     async def _parse_inference_request(self, request: Request) -> dict:
-        body = await request.json()
+        try:
+            body = await request.json()
+        except Exception as e:
+            logger.error(f"[parse] Failed to parse request body as JSON: {e}")
+            raise ValueError(f"Invalid JSON body: {e}")
+        
         model_name = body.get("model")
         base_model, adapter_name = self._parse_model_and_adapter(model_name)
         prompt_info = self._extract_prompt(body)
+        request_id = body.get("request_id", str(uuid.uuid4()))
+        
+        logger.info(f"[parse] request_id={request_id} model={model_name} adapter={adapter_name}")
+        
         return {
-            "request_id":   body.get("request_id", str(uuid.uuid4())),
+            "request_id":   request_id,
             "model":        model_name,
             "base_model":   base_model,
             "adapter_name": adapter_name,
@@ -408,6 +417,8 @@ class VLLMDeployment:
         adapter_name = parsed["adapter_name"]
         request_id   = parsed["request_id"]
 
+        logger.info(f"[inference] START request_id={request_id} adapter={adapter_name} ongoing={self._ongoing}")
+
         sampling_params = SamplingParams(
             max_tokens=body.get("max_tokens", 64),
             temperature=body.get("temperature", 0.0),
@@ -416,10 +427,14 @@ class VLLMDeployment:
 
         lora_request = None
         if adapter_name is not None:
+            lora_path = os.path.join(ADAPTER_PATH, adapter_name)
+            if not os.path.isdir(lora_path):
+                logger.error(f"[inference] request_id={request_id} adapter path not found: {lora_path}")
+                return JSONResponse({"error": f"Adapter '{adapter_name}' not found at {lora_path}"}, status_code=400)
             lora_request = LoRARequest(
                 lora_name=adapter_name,
                 lora_int_id=abs(hash(adapter_name)) % (2**31),
-                lora_local_path=os.path.join(ADAPTER_PATH, adapter_name),
+                lora_local_path=lora_path,
             )
 
         self._ongoing += 1
@@ -436,9 +451,11 @@ class VLLMDeployment:
                 final_output = output
 
             if final_output is None or not final_output.outputs:
+                logger.error(f"[inference] request_id={request_id} engine returned no output (final_output={final_output})")
                 return JSONResponse({"error": "No output generated"}, status_code=500)
 
             tokens_generated = len(final_output.outputs[0].token_ids) if hasattr(final_output.outputs[0], 'token_ids') else 0
+            logger.info(f"[inference] OK request_id={request_id} tokens={tokens_generated}")
 
             return JSONResponse({
                 "id":           request_id,
@@ -453,6 +470,7 @@ class VLLMDeployment:
                 "adapter_name": adapter_name,
             })
         except Exception as e:
+            logger.error(f"[inference] FAILED request_id={request_id} adapter={adapter_name} error={e}\n{traceback.format_exc()}")
             return JSONResponse({"error": f"Inference failed: {str(e)}"}, status_code=500)
         finally:
             inf_time_ms = (time.perf_counter() - inf_start) * 1000
@@ -469,6 +487,7 @@ class VLLMDeployment:
     async def _forward_chat_request(self, target_ip: str, body: dict, request_id: str = None) -> JSONResponse:
         import aiohttp
         url = f"http://{target_ip}:8000/internal/chat/completions"
+        logger.info(f"[forward] START request_id={request_id} target={target_ip}")
         fwd_start = time.perf_counter()
         success = False
         try:
@@ -478,8 +497,14 @@ class VLLMDeployment:
                     timeout=aiohttp.ClientTimeout(total=180),
                 )
                 success = (resp.status == 200)
-                return JSONResponse(content=await resp.json(), status_code=resp.status)
+                resp_body = await resp.json()
+                if not success:
+                    logger.error(f"[forward] request_id={request_id} target={target_ip} returned status={resp.status} body={resp_body}")
+                else:
+                    logger.info(f"[forward] OK request_id={request_id} target={target_ip} status={resp.status}")
+                return JSONResponse(content=resp_body, status_code=resp.status)
         except Exception as e:
+            logger.error(f"[forward] FAILED request_id={request_id} target={target_ip} error={e}\n{traceback.format_exc()}")
             return JSONResponse({"error": f"Forward to {target_ip} failed: {str(e)}"}, status_code=502)
         finally:
             fwd_time_ms = (time.perf_counter() - fwd_start) * 1000
@@ -516,9 +541,11 @@ class VLLMDeployment:
     # internal endpoint for forwarded requests from other nodes in the cluster. 
     @app.post("/internal/chat/completions")
     async def internal_chat_completions(self, request: Request):
+        logger.info(f"[endpoint] /internal/chat/completions from {request.client.host if request.client else 'unknown'}")
         try:
             parsed = await self._parse_inference_request(request)
         except ValueError as e:
+            logger.error(f"[endpoint] /internal/chat/completions parse error: {e}")
             return JSONResponse({"error": str(e)}, status_code=400)
         return await self._serve_local_chat_request(parsed)
 
@@ -526,21 +553,24 @@ class VLLMDeployment:
     @app.post("/v1/chat/completions")
     async def chat_completions(self, request: Request):
         e2e_start = time.perf_counter()
+        logger.info(f"[endpoint] /v1/chat/completions from {request.client.host if request.client else 'unknown'}")
         
         try:
             parsed = await self._parse_inference_request(request)
         except (ValueError, Exception) as e:
+            logger.error(f"[endpoint] /v1/chat/completions parse error: {e}\n{traceback.format_exc()}")
             return JSONResponse({"error": str(e)}, status_code=400)
 
         request_id = parsed["request_id"]
         adapter_name = parsed["adapter_name"]
 
         routing_start = time.perf_counter()
-        target_ip = self._choose_target_node(adapter_name, parsed["client_ip"])
+        target_ip = await self._choose_target_node(adapter_name, parsed["client_ip"])
         routing_time_ms = (time.perf_counter() - routing_start) * 1000
         
         is_local = (target_ip == self.my_ip)
         reason = "local" if is_local else "forwarded"
+        logger.info(f"[routing] request_id={request_id} adapter={adapter_name} target={target_ip} reason={reason}")
         self.metrics.log(
             "routing_decision",
             request_id=request_id,
@@ -560,6 +590,7 @@ class VLLMDeployment:
             response = await self._forward_chat_request(target_ip, body, request_id)
 
         e2e_time_ms = (time.perf_counter() - e2e_start) * 1000
+        logger.info(f"[e2e] request_id={request_id} status={response.status_code} total_ms={e2e_time_ms:.1f} forwarded={not is_local} served_by={target_ip}")
         self.metrics.log(
             "e2e_latency",
             request_id=request_id,
