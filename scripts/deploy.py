@@ -643,12 +643,14 @@ if __name__ == "__main__":
 
     #delete old deployment if it exists. 
     try:
-        serve.start()
+        serve.start(http_options={"host": "0.0.0.0", "port": 8000})
         serve.delete("memlora")
         time.sleep(2)
     except Exception:
         pass
 
+    serve.shutdown()
+    time.sleep(2)
     serve.start(http_options={"host": "0.0.0.0", "port": 8000})
     handle = VLLMDeployment.bind()
     serve.run(handle, name="memlora", route_prefix="/", blocking=False)
