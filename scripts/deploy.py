@@ -104,7 +104,12 @@ class VLLMDeployment:
         # Peer adapter state cache: {adapter_name: {tier: set(node_ips)}}
         self._peer_adapter_state: dict[str, dict[str, set]] = {}
         # Timestamps for adapter state per (adapter, node) to reject out-of-order messages
-        self._adapter_state_timestamps: dict[tuple[str, str], float] = {}
+        self._peer_adapter_state: dict[str, dict[str, set]] = {
+            name: {"gpu": set(), "cpu": set(), "disk": set()}
+            for name in self.lora_names
+        }
+        for name in self.lora_names:
+            self._peer_adapter_state[name]["disk"].add(self.my_ip)
 
         # Gossip loop will be started after engine is ready
         self._gossip_task = None
@@ -115,12 +120,6 @@ class VLLMDeployment:
         self._local_gpu_lru: OrderedDict[str, None] = OrderedDict()
         self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
 
-        self._adapter_state: dict[str, dict[str, set]] = {
-            name: {"gpu": set(), "cpu": set(), "disk": set()}
-            for name in self.lora_names
-        }
-        for name in self.lora_names:
-            self._adapter_state[name]["disk"].add(self.my_ip)
 
         logger.info(f"[vllm] Node: {self.my_ip}")
         logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
@@ -219,9 +218,9 @@ class VLLMDeployment:
     def _update_node_tier(self, adapter_name: str, node_ip: str,
                         old_tier: str, new_tier: str):
         """O(1) tier transition for any node in the cluster map."""
-        if adapter_name not in self._adapter_state:
-            self._adapter_state[adapter_name] = {"gpu": set(), "cpu": set(), "disk": set()}
-        tiers = self._adapter_state[adapter_name]
+        if adapter_name not in self._peer_adapter_state:
+            self._peer_adapter_state[adapter_name] = {"gpu": set(), "cpu": set(), "disk": set()}
+        tiers = self._peer_adapter_state[adapter_name]
         tiers[old_tier].discard(node_ip)
         tiers[new_tier].add(node_ip)
 
@@ -578,12 +577,12 @@ class VLLMDeployment:
             # asyncio.create_task(
             #     self._broadcast_state_change(adapter, old_tier, new_tier)
             # )
-        logger.info(
-            f"[lru] request_id={request_id} adapter={adapter_name} "
-            f"gpu={list(self._local_gpu_lru.keys())} "
-            f"cpu={list(self._local_cpu_lru.keys())} "
-            f"changes={changes}"
-        )
+            logger.info(
+                f"[lru] request_id={request_id} adapter={adapter_name} "
+                f"gpu={list(self._local_gpu_lru.keys())} "
+                f"cpu={list(self._local_cpu_lru.keys())} "
+                f"changes={changes}"
+            )
 
         self._ongoing += 1
         inf_start = time.perf_counter()
