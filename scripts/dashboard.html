@@ -104,9 +104,9 @@
     padding: 7px 10px; border-bottom: 1px solid var(--border);
   }
   table tr:last-child td { border-bottom: none; }
-  table .tier-gpu { color: var(--green); }
-  table .tier-cpu { color: var(--yellow); }
-  table .tier-disk { color: var(--text-dim); }
+  table .tier-gpu, .tier-gpu { color: var(--green); font-weight: 600; }
+  table .tier-cpu, .tier-cpu { color: var(--yellow); font-weight: 600; }
+  table .tier-disk, .tier-disk { color: var(--text-dim); }
 
   .log-section { margin-top: 24px; }
   .log-tabs {
@@ -245,6 +245,11 @@ function colorizeLog(line) {
   return html;
 }
 
+function renderAdapterList(label, adapters, cls) {
+  if (!adapters || adapters.length === 0) return `<span class="${cls}">-</span>`;
+  return adapters.map(a => `<span class="${cls}">${a}</span>`).join(', ');
+}
+
 function renderNodes(nodes) {
   const grid = $('#node-grid');
   const sortedIps = Object.keys(nodes).sort();
@@ -256,6 +261,9 @@ function renderNodes(nodes) {
     const maxQ = 8;
     const pct = ok ? Math.min(100, (q / maxQ) * 100) : 0;
     const isSelf = ip === lastData.source_node;
+    const la = n.local_adapters || {};
+    const gpuList = la.gpu || [];
+    const cpuList = la.cpu || [];
 
     return `
       <div class="card">
@@ -277,6 +285,17 @@ function renderNodes(nodes) {
           <span class="label">Gossip</span>
           <span class="value">${ok ? (n.gossip_running ? 'active' : 'inactive') : '-'}</span>
         </div>
+        ${ok ? `
+        <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+          <div class="stat-row">
+            <span class="label">GPU (${gpuList.length}/3)</span>
+            <span class="value" style="font-size:11px">${renderAdapterList('gpu', gpuList, 'tier-gpu')}</span>
+          </div>
+          <div class="stat-row">
+            <span class="label">CPU (${cpuList.length}/6)</span>
+            <span class="value" style="font-size:11px">${renderAdapterList('cpu', cpuList, 'tier-cpu')}</span>
+          </div>
+        </div>` : ''}
         ${n.error ? `<div class="stat-row"><span class="label" style="color:var(--red)">${n.error}</span></div>` : ''}
       </div>`;
   }).join('');

@@ -778,6 +778,10 @@ class VLLMDeployment:
             "local_queue": self._ongoing,
             "peer_queues": self._peer_queue_lengths,
             "peer_timestamps": self._peer_queue_timestamps,
+            "local_adapters": {
+                "gpu": list(self._local_gpu_lru.keys()),
+                "cpu": list(self._local_cpu_lru.keys()),
+            },
             "adapter_state": {
                 adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
                 for adapter, tiers in self._peer_adapter_state.items()
@@ -821,6 +825,10 @@ class VLLMDeployment:
             "local_queue": self._ongoing,
             "peer_queues": dict(self._peer_queue_lengths),
             "peer_timestamps": dict(self._peer_queue_timestamps),
+            "local_adapters": {
+                "gpu": list(self._local_gpu_lru.keys()),
+                "cpu": list(self._local_cpu_lru.keys()),
+            },
             "adapter_state": {
                 a: {t: list(n) for t, n in tiers.items()}
                 for a, tiers in self._peer_adapter_state.items()
@@ -848,8 +856,9 @@ class VLLMDeployment:
                 return peer_ip, state
             except Exception as e:
                 return peer_ip, {
-                    "node": peer_ip, "status": f"unreachable",
+                    "node": peer_ip, "status": "unreachable",
                     "local_queue": None, "peer_queues": {},
+                    "local_adapters": {"gpu": [], "cpu": []},
                     "gossip_running": False, "gossip_task_active": False,
                     "adapter_state": {}, "logs": [],
                     "error": str(e),
