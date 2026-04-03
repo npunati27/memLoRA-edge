@@ -167,21 +167,21 @@ class VLLMDeployment:
         if len(all_nodes) == 1:
             return self.my_ip
 
-        sampled = random.sample(all_nodes, 2)
         queues = self._get_known_queue_lengths()
 
         candidates = []
-        for node in sampled:
+        for node in all_nodes:
             tier = self._get_node_tier(node, adapter_name)
             qlen = queues.get(node, 0)
             candidates.append((node, tier, qlen))
 
-        min_rank = min(TIER_RANK[tier] for _, tier, _ in candidates)
-        best = [c for c in candidates if TIER_RANK[c[1]] == min_rank]
+        # memory tier --> gpu < cpu < disk
+        best_rank = min(TIER_RANK[tier] for _, tier, _ in candidates)
+        best = [c for c in candidates if TIER_RANK[c[1]] == best_rank]
 
         if len(best) > 1:
-            min_q = min(qlen for _, _, qlen in best)
-            best = [c for c in best if c[2] == min_q]
+            best_q = min(qlen for _, _, qlen in best)
+            best = [c for c in best if c[2] == best_q]
 
         chosen = random.choice(best)[0]
 
@@ -189,8 +189,8 @@ class VLLMDeployment:
             "memory_choice",
             adapter_name=adapter_name,
             source_ip=source_ip,
-            sampled_nodes=sampled,
-            sampled_state={
+            candidate_nodes=all_nodes,
+            candidate_state={
                 node: {"tier": tier, "queue_len": qlen}
                 for node, tier, qlen in candidates
             },
@@ -198,7 +198,7 @@ class VLLMDeployment:
         )
 
         return chosen
-        
+
     def _get_known_queue_lengths(self) -> dict[str, int]:
         queues = {self.my_ip: self._ongoing}
 
