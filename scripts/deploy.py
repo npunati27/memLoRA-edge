@@ -102,14 +102,14 @@ class VLLMDeployment:
         }
 
         # Peer adapter state cache: {adapter_name: {tier: set(node_ips)}}
-        self._peer_adapter_state: dict[str, dict[str, set]] = {}
-        # Timestamps for adapter state per (adapter, node) to reject out-of-order messages
         self._peer_adapter_state: dict[str, dict[str, set]] = {
             name: {"gpu": set(), "cpu": set(), "disk": set()}
             for name in self.lora_names
         }
         for name in self.lora_names:
             self._peer_adapter_state[name]["disk"].add(self.my_ip)
+        # Timestamps for adapter state per (adapter, node) to reject out-of-order messages
+        self._adapter_state_timestamps: dict[tuple, float] = {}
 
         # Gossip loop will be started after engine is ready
         self._gossip_task = None
@@ -571,18 +571,18 @@ class VLLMDeployment:
                 lora_local_path=lora_path,
             )
 
-        changes = self._track_local_adapter(adapter_name)
-        for adapter, old_tier, new_tier in changes:
-            #TODO: make sure this is the right way to broadcast changes
-            # asyncio.create_task(
-            #     self._broadcast_state_change(adapter, old_tier, new_tier)
-            # )
-            logger.info(
-                f"[lru] request_id={request_id} adapter={adapter_name} "
-                f"gpu={list(self._local_gpu_lru.keys())} "
-                f"cpu={list(self._local_cpu_lru.keys())} "
-                f"changes={changes}"
-            )
+        if adapter_name is not None:
+            changes = self._track_local_adapter(adapter_name)
+            for adapter, old_tier, new_tier in changes:
+                asyncio.create_task(
+                    self._broadcast_state_change(adapter, old_tier, new_tier)
+                )
+                logger.info(
+                    f"[lru] request_id={request_id} adapter={adapter} "
+                    f"{old_tier}->{new_tier} "
+                    f"gpu={list(self._local_gpu_lru.keys())} "
+                    f"cpu={list(self._local_cpu_lru.keys())}"
+                )
 
         self._ongoing += 1
         inf_start = time.perf_counter()
