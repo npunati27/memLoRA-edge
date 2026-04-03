@@ -713,9 +713,9 @@ class VLLMDeployment:
 
         routing_start = time.perf_counter()
         if ROUTING_MODE == "memory":
-            target_ip = await self._choose_target_node_memory(adapter_name, parsed["client_ip"])
+            target_ip = self._choose_target_node_memory(adapter_name, parsed["client_ip"])
         else:
-            target_ip = await self._choose_target_node_baseline(adapter_name, parsed["client_ip"])
+            target_ip = self._choose_target_node_baseline(adapter_name, parsed["client_ip"])
         # target_ip = self._choose_target_node(adapter_name, parsed["client_ip"])
         routing_time_ms = (time.perf_counter() - routing_start) * 1000
         
