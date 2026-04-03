@@ -48,6 +48,7 @@ class InferenceMixin:
             )
 
         if adapter_name is not None:
+            tier_before = self._get_local_tier(adapter_name)
             changes = self._track_local_adapter(adapter_name)
             for adapter, old_tier, new_tier in changes:
                 asyncio.create_task(
@@ -103,6 +104,7 @@ class InferenceMixin:
                 }],
                 "served_by":    self.my_ip,
                 "adapter_name": adapter_name,
+                "tier_before":  tier_before, 
             })
         except Exception as e:
             logger.error(
@@ -120,6 +122,7 @@ class InferenceMixin:
                 adapter=adapter_name,
                 latency_ms=inf_time_ms,
                 tokens=tokens_generated,
+                tier_before=tier_before, 
             )
             self._ongoing -= 1
 
