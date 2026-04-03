@@ -14,6 +14,8 @@ from vllm.lora.request import LoRARequest
 HOME         = os.path.expanduser("~")
 LOG_DIR      = os.path.join(HOME, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
+ROUTING_MODE = os.getenv("ROUTING_MODE", "baseline").strip().lower()
+TIER_RANK = {"gpu": 0, "cpu": 1, "disk": 2}
 
 logging.basicConfig(
     level=logging.INFO,
@@ -100,9 +102,14 @@ class VLLMDeployment:
         }
 
         # Peer adapter state cache: {adapter_name: {tier: set(node_ips)}}
-        self._peer_adapter_state: dict[str, dict[str, set]] = {}
+        self._peer_adapter_state: dict[str, dict[str, set]] = {
+            name: {"gpu": set(), "cpu": set(), "disk": set()}
+            for name in self.lora_names
+        }
+        for name in self.lora_names:
+            self._peer_adapter_state[name]["disk"].add(self.my_ip)
         # Timestamps for adapter state per (adapter, node) to reject out-of-order messages
-        self._adapter_state_timestamps: dict[tuple[str, str], float] = {}
+        self._adapter_state_timestamps: dict[tuple, float] = {}
 
         # Gossip loop will be started after engine is ready
         self._gossip_task = None
@@ -110,6 +117,9 @@ class VLLMDeployment:
         self._aiohttp_session = None
 
         # TODO: LRU tracker for local GPU/CPU adapter state
+        self._local_gpu_lru: OrderedDict[str, None] = OrderedDict()
+        self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
+
 
         logger.info(f"[vllm] Node: {self.my_ip}")
         logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
@@ -137,6 +147,58 @@ class VLLMDeployment:
         self._start_gossip_loop()
 
 
+    def _get_node_tier(self, node_ip: str, adapter_name: str | None) -> str:
+        if adapter_name is None:
+            return "gpu"
+
+        if node_ip == self.my_ip:
+            return self._get_local_tier(adapter_name)
+
+        peer_tiers = self._peer_adapter_state.get(adapter_name, {})
+        if node_ip in peer_tiers.get("gpu", set()):
+            return "gpu"
+        if node_ip in peer_tiers.get("cpu", set()):
+            return "cpu"
+        return "disk"
+
+    def _choose_target_node_memory(self, adapter_name: str, source_ip: str) -> str:
+        all_nodes = [self.my_ip] + [ip for ip in self.peer_ips if ip != self.my_ip]
+
+        if len(all_nodes) == 1:
+            return self.my_ip
+
+        queues = self._get_known_queue_lengths()
+
+        candidates = []
+        for node in all_nodes:
+            tier = self._get_node_tier(node, adapter_name)
+            qlen = queues.get(node, 0)
+            candidates.append((node, tier, qlen))
+
+        # memory tier --> gpu < cpu < disk
+        best_rank = min(TIER_RANK[tier] for _, tier, _ in candidates)
+        best = [c for c in candidates if TIER_RANK[c[1]] == best_rank]
+
+        if len(best) > 1:
+            best_q = min(qlen for _, _, qlen in best)
+            best = [c for c in best if c[2] == best_q]
+
+        chosen = random.choice(best)[0]
+
+        self.metrics.log(
+            "memory_choice",
+            adapter_name=adapter_name,
+            source_ip=source_ip,
+            candidate_nodes=all_nodes,
+            candidate_state={
+                node: {"tier": tier, "queue_len": qlen}
+                for node, tier, qlen in candidates
+            },
+            chosen_node=chosen,
+        )
+
+        return chosen
+
     def _get_known_queue_lengths(self) -> dict[str, int]:
         queues = {self.my_ip: self._ongoing}
 
@@ -146,9 +208,77 @@ class VLLMDeployment:
 
         return queues
 
+        # Start gossip loop now that engine is ready
+        self._start_gossip_loop()
+
+    
+    # LRU Tracker Methods (TODO)
+    # ── LRU tracking ──────────────────────────────────────────────────────────
+
+    def _update_node_tier(self, adapter_name: str, node_ip: str,
+                        old_tier: str, new_tier: str):
+        """O(1) tier transition for any node in the cluster map."""
+        if adapter_name not in self._peer_adapter_state:
+            self._peer_adapter_state[adapter_name] = {"gpu": set(), "cpu": set(), "disk": set()}
+        tiers = self._peer_adapter_state[adapter_name]
+        tiers[old_tier].discard(node_ip)
+        tiers[new_tier].add(node_ip)
+
+    def _track_local_adapter(self, adapter_name: str):
+        """
+        Mirror vLLM's LRU eviction logic for the local node.
+        Updates both the local LRU and the cluster-wide adapter state map.
+        Broadcasts any tier changes to peers.
+        Returns list of (adapter, old_tier, new_tier) changes to broadcast.
+        """
+        changes = []
+
+        if adapter_name in self._local_gpu_lru:
+            # already hot in GPU — just bump recency, no tier change
+            self._local_gpu_lru.move_to_end(adapter_name)
+            return changes
+
+        # determine where it currently lives
+        if adapter_name in self._local_cpu_lru:
+            old_tier = "cpu"
+            self._local_cpu_lru.pop(adapter_name)
+        else:
+            old_tier = "disk"
+
+        # make room in GPU if needed
+        if len(self._local_gpu_lru) >= MAX_GPU_LORA:
+            evicted_name, _ = self._local_gpu_lru.popitem(last=False)  # LRU end
+
+            # evicted from GPU → CPU
+            self._local_cpu_lru[evicted_name] = None
+            self._update_node_tier(evicted_name, self.my_ip, "gpu", "cpu")
+            changes.append((evicted_name, "gpu", "cpu"))
+
+            # make room in CPU if needed
+            if len(self._local_cpu_lru) > MAX_CPU_LORA:
+                cpu_evicted, _ = self._local_cpu_lru.popitem(last=False)
+                self._update_node_tier(cpu_evicted, self.my_ip, "cpu", "disk")
+                changes.append((cpu_evicted, "cpu", "disk"))
+
+        # load adapter into GPU
+        self._local_gpu_lru[adapter_name] = None
+        self._update_node_tier(adapter_name, self.my_ip, old_tier, "gpu")
+        changes.append((adapter_name, old_tier, "gpu"))
+
+        return changes
+
+    def _get_local_tier(self, adapter_name: str) -> str:
+        """Return current memory tier for an adapter on this node."""
+        if adapter_name in self._local_gpu_lru:
+            return "gpu"
+        if adapter_name in self._local_cpu_lru:
+            return "cpu"
+        return "disk"
+        
+        
     # Routing Logic 
 
-    async def _choose_target_node(self, adapter_name: str, source_ip: str) -> str:
+    def _choose_target_node_baseline(self, adapter_name: str, source_ip: str) -> str:
         # TODO: use peer state + LRU tracker to pick best node
         all_nodes = [self.my_ip] + [ip for ip in self.peer_ips if ip != self.my_ip]
 
@@ -441,6 +571,19 @@ class VLLMDeployment:
                 lora_local_path=lora_path,
             )
 
+        if adapter_name is not None:
+            changes = self._track_local_adapter(adapter_name)
+            for adapter, old_tier, new_tier in changes:
+                asyncio.create_task(
+                    self._broadcast_state_change(adapter, old_tier, new_tier)
+                )
+                logger.info(
+                    f"[lru] request_id={request_id} adapter={adapter} "
+                    f"{old_tier}->{new_tier} "
+                    f"gpu={list(self._local_gpu_lru.keys())} "
+                    f"cpu={list(self._local_cpu_lru.keys())}"
+                )
+
         self._ongoing += 1
         inf_start = time.perf_counter()
         tokens_generated = 0
@@ -569,7 +712,11 @@ class VLLMDeployment:
         adapter_name = parsed["adapter_name"]
 
         routing_start = time.perf_counter()
-        target_ip = await self._choose_target_node(adapter_name, parsed["client_ip"])
+        if ROUTING_MODE == "memory":
+            target_ip = self._choose_target_node_memory(adapter_name, parsed["client_ip"])
+        else:
+            target_ip = self._choose_target_node_baseline(adapter_name, parsed["client_ip"])
+        # target_ip = self._choose_target_node(adapter_name, parsed["client_ip"])
         routing_time_ms = (time.perf_counter() - routing_start) * 1000
         
         is_local = (target_ip == self.my_ip)
@@ -631,6 +778,10 @@ class VLLMDeployment:
             "local_queue": self._ongoing,
             "peer_queues": self._peer_queue_lengths,
             "peer_timestamps": self._peer_queue_timestamps,
+            "local_adapters": {
+                "gpu": list(self._local_gpu_lru.keys()),
+                "cpu": list(self._local_cpu_lru.keys()),
+            },
             "adapter_state": {
                 adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
                 for adapter, tiers in self._peer_adapter_state.items()
@@ -674,6 +825,10 @@ class VLLMDeployment:
             "local_queue": self._ongoing,
             "peer_queues": dict(self._peer_queue_lengths),
             "peer_timestamps": dict(self._peer_queue_timestamps),
+            "local_adapters": {
+                "gpu": list(self._local_gpu_lru.keys()),
+                "cpu": list(self._local_cpu_lru.keys()),
+            },
             "adapter_state": {
                 a: {t: list(n) for t, n in tiers.items()}
                 for a, tiers in self._peer_adapter_state.items()
@@ -701,8 +856,9 @@ class VLLMDeployment:
                 return peer_ip, state
             except Exception as e:
                 return peer_ip, {
-                    "node": peer_ip, "status": f"unreachable",
+                    "node": peer_ip, "status": "unreachable",
                     "local_queue": None, "peer_queues": {},
+                    "local_adapters": {"gpu": [], "cpu": []},
                     "gossip_running": False, "gossip_task_active": False,
                     "adapter_state": {}, "logs": [],
                     "error": str(e),
