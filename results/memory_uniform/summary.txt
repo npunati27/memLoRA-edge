@@ -1,0 +1,30 @@
+============================================================
+Results: mode=uniform routing=memory-aware node=http://10.10.1.1:5000
+============================================================
+  Total requests:  479
+  Successful:      479
+  Failed:          0
+  Latency p50:     522ms
+  Latency p95:     1523ms
+  Latency p99:     2820ms
+  Latency mean:    671ms
+
+  Per-adapter mean latency (top 10 by request count):
+    pest_aphid                          n=  25  p50=   495ms  [CPU]
+    soil_moisture                       n=  25  p50=   501ms  [DISK]
+    weather_forecast                    n=  24  p50=   524ms  [DISK]
+    irrigation_zone_c                   n=  24  p50=   491ms  [DISK]
+    pest_general                        n=  21  p50=   348ms  [DISK]
+    weather_humidity                    n=  21  p50=   722ms  [DISK]
+    equip_sensor                        n=  21  p50=   604ms  [DISK]
+    crop_soy_disease                    n=  20  p50=   501ms  [GPU]
+    irrigation_zone_d                   n=  20  p50=   498ms  [DISK]
+    soil_nitrogen                       n=  20  p50=   502ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 143 (29.9%)
+    10.10.1.2: 74 (15.4%)
+    10.10.1.3: 188 (39.2%)
+    10.10.1.4: 74 (15.4%)
+
+Results saved to results.jsonl
