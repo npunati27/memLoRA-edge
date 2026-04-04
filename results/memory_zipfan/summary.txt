@@ -1,0 +1,30 @@
+============================================================
+Results: mode=zipf routing=memory_aware node=http://10.10.1.1:5000
+============================================================
+  Total requests:  479
+  Successful:      479
+  Failed:          0
+  Latency p50:     573ms
+  Latency p95:     1624ms
+  Latency p99:     2136ms
+  Latency mean:    610ms
+
+  Per-adapter mean latency (top 10 by request count):
+    crop_corn_disease                   n= 230  p50=   588ms  [GPU]
+    crop_wheat_disease                  n=  62  p50=   283ms  [GPU]
+    crop_soy_disease                    n=  45  p50=   283ms  [GPU]
+    crop_cotton_disease                 n=  29  p50=   243ms  [CPU]
+    crop_general_health                 n=  19  p50=   243ms  [CPU]
+    pest_aphid                          n=  17  p50=   452ms  [CPU]
+    crop_tomato_disease                 n=  17  p50=   488ms  [CPU]
+    pest_rootworm                       n=   8  p50=   474ms  [CPU]
+    pest_general                        n=   6  p50=   451ms  [DISK]
+    soil_phosphorus                     n=   5  p50=   244ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 70 (14.6%)
+    10.10.1.2: 108 (22.5%)
+    10.10.1.3: 61 (12.7%)
+    10.10.1.4: 240 (50.1%)
+
+Results saved to results.jsonl
