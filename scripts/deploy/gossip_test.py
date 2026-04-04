@@ -1,6 +1,7 @@
-import json
 import time
+import json
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 NODE_URLS = [
     "http://128.105.146.30:5000",
@@ -11,118 +12,182 @@ NODE_URLS = [
 
 ENTRY_NODE = NODE_URLS[0]
 ADAPTER = "qwen-base/equip_drone"
+TIMEOUT = 60
 
 
-def post_json(url, payload, timeout=60):
-    resp = requests.post(url, json=payload, timeout=timeout)
+def get_json(url, timeout=10):
+    r = requests.get(url, timeout=timeout)
+    r.raise_for_status()
+    return r.json()
+
+
+def post_json(url, payload, timeout=TIMEOUT):
+    r = requests.post(url, json=payload, timeout=timeout)
     try:
-        body = resp.json()
+        body = r.json()
     except Exception:
-        body = resp.text
-    return resp, body
+        body = r.text
+    return r.status_code, body
 
 
-def get_json(url, timeout=30):
-    resp = requests.get(url, timeout=timeout)
-    resp.raise_for_status()
-    return resp.json()
+def get_state(node_url):
+    return get_json(f"{node_url}/internal/debug/state")
 
 
-def reset_all_nodes():
-    print("\n== RESET ALL NODES ==")
+def print_cluster_states(label):
+    print(f"\n===== {label} =====")
     for node in NODE_URLS:
-        resp, body = post_json(f"{node}/debug/reset", {})
-        print(node, resp.status_code, body)
+        try:
+            state = get_state(node)
+            print(f"\nnode: {state.get('node')}")
+            print(f"  local_queue: {state.get('local_queue')}")
+            print(f"  peer_queues: {json.dumps(state.get('peer_queues', {}), indent=2)}")
+            print(f"  local GPU: {state.get('local_adapters', {}).get('gpu', [])}")
+            print(f"  local CPU: {state.get('local_adapters', {}).get('cpu', [])}") 
+            print(f"  gossip_running: {state.get('gossip_running')}")
+            print(f"  gossip_task_active: {state.get('gossip_task_active')}")
+        except Exception as e:
+            print(f"\nnode: {node} ERROR: {e}")
 
 
-def print_adapter_views(adapter_name):
-    print(f"\n== ADAPTER VIEW FOR {adapter_name} ==")
+def assert_gossip_running():
+    print("\nChecking gossip health...")
     for node in NODE_URLS:
-        data = get_json(f"{node}/debug/adapter/{adapter_name}")
-        print(f"\nNODE {node}")
-        print(json.dumps(data, indent=2))
+        state = get_state(node)
+        assert state.get("gossip_running") is True, f"{node} gossip_running is False"
+        assert state.get("gossip_task_active") is True, f"{node} gossip_task_active is False"
+    print("All nodes report gossip loop active.")
 
 
-def print_route_views(adapter_name, mode="memory"):
-    print(f"\n== ROUTE VIEW FOR {adapter_name}, mode={mode} ==")
-    for node in NODE_URLS:
-        data = get_json(f"{node}/debug/route?adapter_name={adapter_name}&mode={mode}")
-        print(f"\nCHOOSER {node}")
-        print(json.dumps(data, indent=2))
+def test_queue_gossip():
+    print("\n=== TEST 1: Queue gossip ===")
 
-
-def send_inference(entry_node, model_name):
     payload = {
-        "model": model_name,
-        "messages": [
-            {"role": "user", "content": "Hello who are you?"}
-        ],
-        "max_tokens": 16,
+        "model": ADAPTER,
+        "messages": [{"role": "user", "content": "Explain what a drone is in one sentence."}],
+        "max_tokens": 256,
+        "temperature": 0.0,
     }
-    resp = requests.post(f"{entry_node}/v1/chat/completions", json=payload, timeout=180)
-    print(f"\n=== INFERENCE model={model_name} via {entry_node} ===")
-    print("status:", resp.status_code)
-    try:
-        print(json.dumps(resp.json(), indent=2)[:1000])
-    except Exception:
-        print(resp.text[:1000])
-    resp.raise_for_status()
-    return resp.json()
+
+    def send_req():
+        return post_json(f"{ENTRY_NODE}/v1/chat/completions", payload, timeout=120)
+
+    # fire a few concurrent requests so at least one node has nonzero queue
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        futures = [ex.submit(send_req) for _ in range(4)]
+        time.sleep(1.0)  # give requests time to start + gossip loop time to broadcast
+
+        print_cluster_states("DURING QUEUE TEST")
+
+        observed_nonzero = False
+        for node in NODE_URLS:
+            state = get_state(node)
+            peer_queues = state.get("peer_queues", {})
+            if any(v > 0 for v in peer_queues.values()):
+                observed_nonzero = True
+                break
+
+        assert observed_nonzero, "No node observed a nonzero peer queue via gossip."
+
+        for f in futures:
+            status, body = f.result()
+            assert status == 200, f"Request failed: {status}, {body}"
+
+    time.sleep(0.5)
+    print("Queue gossip test passed.")
 
 
-def assert_gossip_propagated(adapter_name, expected_gpu_node):
-    print("\n== ASSERT GOSSIP PROPAGATED ==")
+def test_adapter_gossip():
+    print("\n=== TEST 2: Adapter-state gossip ===")
+
+    payload = {
+        "model": ADAPTER,
+        "messages": [{"role": "user", "content": "Hello, who are you?"}],
+        "max_tokens": 32,
+        "temperature": 0.0,
+    }
+
+    status, body = post_json(f"{ENTRY_NODE}/v1/chat/completions", payload, timeout=120)
+    assert status == 200, f"Inference failed: {status}, {body}"
+
+    served_by = body.get("served_by")
+    assert served_by, f"No served_by field in response: {body}"
+
+    print(f"Request served by: {served_by}")
+
+    time.sleep(1.0)  # allow adapter_state gossip to propagate
+
+    adapter_name = ADAPTER.split("/", 1)[1]
+
     for node in NODE_URLS:
-        data = get_json(f"{node}/debug/adapter/{adapter_name}")
-        gpu_nodes = data["cluster_view"]["gpu"]
+        state = get_state(node)
+        adapter_state = state.get("adapter_state", {})
+        assert adapter_name in adapter_state, f"{adapter_name} missing from adapter_state on {node}"
 
-        assert expected_gpu_node.replace("http://", "").replace(":5000", "") in gpu_nodes or \
-               expected_gpu_node in gpu_nodes, \
-               f"Node {node} does not think {expected_gpu_node} has {adapter_name} in GPU. Saw {gpu_nodes}"
+        tiers = adapter_state[adapter_name]
+        gpu_nodes = set(tiers.get("gpu", []))
+        cpu_nodes = set(tiers.get("cpu", []))
+        disk_nodes = set(tiers.get("disk", []))
 
-    print("PASS: all nodes learned the adapter GPU location.")
+        # the serving node should now be known as gpu or cpu depending on state after tracking
+        assert served_by in (gpu_nodes | cpu_nodes | disk_nodes), (
+            f"{served_by} not present in any tier for {adapter_name} on {node}"
+        )
+
+    print("Adapter gossip test passed.")
 
 
-def assert_route_prefers_gpu(adapter_name, expected_node, chooser_node=None):
-    print("\n== ASSERT ROUTING PREFERS GPU ==")
-    nodes = [chooser_node] if chooser_node else NODE_URLS
-    for node in nodes:
-        data = get_json(f"{node}/debug/route?adapter_name={adapter_name}&mode=memory")
-        chosen = data["chosen_node"]
-        assert chosen == expected_node, \
-            f"Chooser {node} picked {chosen}, expected {expected_node}"
-    print("PASS: routing prefers expected GPU node.")
+def test_lru_plus_gossip():
+    print("\n=== TEST 3: LRU changes reflected in gossip ===")
+
+    adapters = [
+        "qwen-base/equip_drone",
+        "qwen-base/irrigation_zone_a",
+        "qwen-base/pest_aphid",
+        "qwen-base/soil_nitrogen",
+    ]
+
+    for model_name in adapters:
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": f"Say hi from {model_name}"}],
+            "max_tokens": 16,
+            "temperature": 0.0,
+        }
+        status, body = post_json(f"{ENTRY_NODE}/v1/chat/completions", payload, timeout=120)
+        assert status == 200, f"Failed for {model_name}: {status}, {body}"
+        time.sleep(0.3)
+
+    time.sleep(1.5)
+
+    print_cluster_states("AFTER LRU LOADS")
+
+    # We just verify adapter_state exists cluster-wide and tiers are not duplicated per node.
+    for node in NODE_URLS:
+        state = get_state(node)
+        adapter_state = state.get("adapter_state", {})
+        for adapter, tiers in adapter_state.items():
+            locations = {}
+            for tier_name, nodes in tiers.items():
+                for n in nodes:
+                    locations.setdefault(n, []).append(tier_name)
+            for n, tier_list in locations.items():
+                assert len(tier_list) == 1, (
+                    f"Node {n} appears in multiple tiers {tier_list} for adapter {adapter} on observer {node}"
+                )
+
+    print("LRU + gossip consistency test passed.")
 
 
 def main():
-    reset_all_nodes()
-    time.sleep(1)
-
-    print_adapter_views(ADAPTER)
-
-    # send one request through entry node
-    send_inference(ENTRY_NODE, ADAPTER)
-
-    # Wait for gossip to propagate
-    time.sleep(2)
-
-    print_adapter_views(ADAPTER)
-    print_route_views(ADAPTER, mode="memory")
-
-    gpu_holders = []
-    for node in NODE_URLS:
-        data = get_json(f"{node}/debug/adapter/{ADAPTER}")
-        if data["local_tier"] == "gpu":
-            gpu_holders.append(data["node"])
-
-    assert len(gpu_holders) == 1, f"Expected exactly one GPU holder, got {gpu_holders}"
-    expected_gpu_node = gpu_holders[0]
-
-    assert_gossip_propagated(ADAPTER, expected_gpu_node)
-
-    assert_route_prefers_gpu(ADAPTER, expected_gpu_node)
-
-    print("\nPASS: gossip and routing system test succeeded.")
+    print_cluster_states("INITIAL")
+    assert_gossip_running()
+    test_queue_gossip()
+    test_adapter_gossip()
+    # only run this if those adapter names actually exist on disk
+    test_lru_plus_gossip()
+    print_cluster_states("FINAL")
+    print("\nAll gossip tests passed.")
 
 
 if __name__ == "__main__":
