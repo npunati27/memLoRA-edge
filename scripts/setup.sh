@@ -37,7 +37,6 @@ pip install -q \
 
 pip install -q \
     "vllm==0.8.5" \
-    "ray[serve,llm]==2.47.1" \
     "transformers==4.51.3" \
     "huggingface_hub>=0.23.0" \
     "click==8.1.7" \
@@ -146,18 +145,18 @@ for dst in 0 1 2 3; do
     CLASS_ID=$((CLASS_ID + 1))
 done
 
-ray stop --force 2>/dev/null || true
-sleep 2
+# ray stop --force 2>/dev/null || true
+# sleep 2
 
-# every node is its own head 
-ray start --head \
-    --node-ip-address="$LAN_IP" \
-    --port=6379 \
-    --dashboard-host=0.0.0.0 \
-    --num-gpus=1 \
-    --num-cpus=32
+# # every node is its own head 
+# ray start --head \
+#     --node-ip-address="$LAN_IP" \
+#     --port=6379 \
+#     --dashboard-host=0.0.0.0 \
+#     --num-gpus=1 \
+#     --num-cpus=32
 
-echo "==> node$NODE_IDX ray cluster ready (standalone)"
+echo "==> node$NODE_IDX ready"
 
 
 cat > ~/peers.json << PEERS
