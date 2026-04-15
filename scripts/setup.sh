@@ -2,13 +2,18 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 [--no-sudo|--sudo] NODE_IDX IP0 [IP1 ...]" >&2
+    echo "Usage: $0 [options] NODE_IDX IP0 [IP1 ...]" >&2
     echo "  NODE_IDX — 0-based index of this machine in the IP list" >&2
     echo "  IPn      — LAN IPs of every node, same order on all hosts" >&2
+    echo " --enable-tc — apply per-peer HTB+netem limits (off by default)" >&2
+    echo "  --no-tc    — do not run tc (default)" >&2
     echo " --no-sudo — run apt and tc without sudo (overrides MEMLORA_USE_SUDO)" >&2
     echo "  --sudo    — use sudo for apt and tc (default)" >&2
-    echo "Environment: MEMLORA_USE_SUDO=yes|no (default yes). 0/no/false/off also disable." >&2
+    echo "Environment:" >&2
+    echo "  MEMLORA_USE_SUDO=yes|no (default yes). 0/no/false/off also disable." >&2
+    echo "  MEMLORA_ENABLE_TC=yes|no (default no). 1/yes/true/on enables tc." >&2
     echo "Example (3 nodes, this is node 1): $0 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
+    echo "Example with shaping: $0 --enable-tc 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
     exit 1
 }
 
@@ -17,10 +22,17 @@ case "${MEMLORA_USE_SUDO:-yes}" in 0|no|false|off) SHOULD_SUDO=false ;;
     1|yes|true|on)  SHOULD_SUDO=true ;;
 esac
 
+ENABLE_TC=false
+case "${MEMLORA_ENABLE_TC:-no}" in 1|yes|true|on) ENABLE_TC=true ;;
+ 0|no|false|off) ENABLE_TC=false ;;
+esac
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --no-sudo) SHOULD_SUDO=false; shift ;;
         --sudo)    SHOULD_SUDO=true; shift ;;
+        --enable-tc|--tc) ENABLE_TC=true; shift ;;
+        --no-tc)   ENABLE_TC=false; shift ;;
         -h|--help) usage ;;
         *) break ;;
     esac
@@ -47,9 +59,14 @@ MY_IP="${NODE_IPS[$NODE_IDX]}"
 
 echo "==> Setting up node$NODE_IDX / $NUM_NODES nodes (LAN IP: $MY_IP)"
 if [[ ${#SUDO[@]} -gt 0 ]]; then
-    echo "==> Using sudo for package install and traffic control"
+    echo "==> Using sudo for package install"
 else
     echo "==> Running without sudo (MEMLORA_USE_SUDO / --no-sudo)"
+fi
+if [[ "$ENABLE_TC" == true ]]; then
+    echo "==> Traffic shaping (tc) will be configured (--enable-tc / MEMLORA_ENABLE_TC)"
+else
+    echo "==> Traffic shaping (tc) skipped (use --enable-tc or MEMLORA_ENABLE_TC=yes)"
 fi
 
 "${SUDO[@]}" apt-get update -qq
@@ -160,59 +177,61 @@ else:
         print(f"  created: {name}")
 EOF
 
-LAN_IFACE="enp65s0np0"
-LAN_IP=$(ip -4 addr show "$LAN_IFACE" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+if [[ "$ENABLE_TC" == true ]]; then
+    LAN_IFACE="enp65s0np0"
+    LAN_IP=$(ip -4 addr show "$LAN_IFACE" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
-"${SUDO[@]}" tc qdisc del dev "$LAN_IFACE" root 2>/dev/null || true
+    "${SUDO[@]}" tc qdisc del dev "$LAN_IFACE" root 2>/dev/null || true
 
-"${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" root handle 1: htb default 1
-"${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1: classid 1:1 htb rate 1gbit
+    "${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" root handle 1: htb default 1
+    "${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1: classid 1:1 htb rate 1gbit
 
-# Per-link shaping: deterministic from (src_idx, dst_idx) so any N works.
-_link_latency() {
-    local i=$1 j=$2
-    local d=$(( i > j ? i - j : j - i ))
-    local ms=$(( 10 + d * 30 + (i + j) * 5 ))
-    (( ms > 120 )) && ms=120
-    echo "${ms}ms"
-}
+    # Per-link shaping: deterministic from (src_idx, dst_idx) so any N works.
+    _link_latency() {
+        local i=$1 j=$2
+        local d=$(( i > j ? i - j : j - i ))
+        local ms=$(( 10 + d * 30 + (i + j) * 5 ))
+        (( ms > 120 )) && ms=120
+        echo "${ms}ms"
+    }
 
-_link_bw() {
-    local i=$1 j=$2
-    local d=$(( i > j ? i - j : j - i ))
-    local mb=$(( 100 - d * 25 ))
-    (( mb < 10 )) && mb=10
-    echo "${mb}mbit"
-}
+    _link_bw() {
+        local i=$1 j=$2
+        local d=$(( i > j ? i - j : j - i ))
+        local mb=$(( 100 - d * 25 ))
+        (( mb < 10 )) && mb=10
+        echo "${mb}mbit"
+    }
 
-_link_loss() {
-    local i=$1 j=$2
-    local p=$(( (i * 3 + j * 5 + i * j) % 9 ))
-    echo "${p}%"
-}
+    _link_loss() {
+        local i=$1 j=$2
+        local p=$(( (i * 3 + j * 5 + i * j) % 9 ))
+        echo "${p}%"
+    }
 
-CLASS_ID=10
+    CLASS_ID=10
 
-for (( dst = 0; dst < NUM_NODES; dst++ )); do
-    (( dst == NODE_IDX )) && continue
+    for (( dst = 0; dst < NUM_NODES; dst++ )); do
+        (( dst == NODE_IDX )) && continue
 
-    DST_IP="${NODE_IPS[$dst]}"
-    CLASS="1:$CLASS_ID"
-    LAT=$(_link_latency "$NODE_IDX" "$dst")
-    BW=$(_link_bw "$NODE_IDX" "$dst")
-    LOSS=$(_link_loss "$NODE_IDX" "$dst")
+        DST_IP="${NODE_IPS[$dst]}"
+        CLASS="1:$CLASS_ID"
+        LAT=$(_link_latency "$NODE_IDX" "$dst")
+        BW=$(_link_bw "$NODE_IDX" "$dst")
+        LOSS=$(_link_loss "$NODE_IDX" "$dst")
 
-    "${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1:1 classid "$CLASS" \
-        htb rate "$BW"
+        "${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1:1 classid "$CLASS" \
+            htb rate "$BW"
 
-    "${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" parent "$CLASS" handle "${CLASS_ID}0:" \
-        netem delay "$LAT" loss "$LOSS"
+        "${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" parent "$CLASS" handle "${CLASS_ID}0:" \
+            netem delay "$LAT" loss "$LOSS"
 
-    "${SUDO[@]}" tc filter add dev "$LAN_IFACE" protocol ip parent 1: prio 1 \
-        u32 match ip dst "$DST_IP/32" flowid "$CLASS"
+        "${SUDO[@]}" tc filter add dev "$LAN_IFACE" protocol ip parent 1: prio 1 \
+            u32 match ip dst "$DST_IP/32" flowid "$CLASS"
 
-    CLASS_ID=$((CLASS_ID + 1))
-done
+        CLASS_ID=$((CLASS_ID + 1))
+    done
+fi
 
 # ray stop --force 2>/dev/null || true
 # sleep 2
