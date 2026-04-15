@@ -2,12 +2,34 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 NODE_IDX IP0 [IP1 ...]" >&2
+    echo "Usage: $0 [--no-sudo|--sudo] NODE_IDX IP0 [IP1 ...]" >&2
     echo "  NODE_IDX — 0-based index of this machine in the IP list" >&2
     echo "  IPn      — LAN IPs of every node, same order on all hosts" >&2
+    echo " --no-sudo — run apt and tc without sudo (overrides MEMLORA_USE_SUDO)" >&2
+    echo "  --sudo    — use sudo for apt and tc (default)" >&2
+    echo "Environment: MEMLORA_USE_SUDO=yes|no (default yes). 0/no/false/off also disable." >&2
     echo "Example (3 nodes, this is node 1): $0 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
     exit 1
 }
+
+SHOULD_SUDO=true
+case "${MEMLORA_USE_SUDO:-yes}" in 0|no|false|off) SHOULD_SUDO=false ;;
+    1|yes|true|on)  SHOULD_SUDO=true ;;
+esac
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-sudo) SHOULD_SUDO=false; shift ;;
+        --sudo)    SHOULD_SUDO=true; shift ;;
+        -h|--help) usage ;;
+        *) break ;;
+    esac
+done
+
+if [[ "$SHOULD_SUDO" == true ]]; then SUDO=(sudo)
+else
+    SUDO=()
+fi
 
 [[ $# -lt 2 ]] && usage
 
@@ -24,9 +46,14 @@ fi
 MY_IP="${NODE_IPS[$NODE_IDX]}"
 
 echo "==> Setting up node$NODE_IDX / $NUM_NODES nodes (LAN IP: $MY_IP)"
+if [[ ${#SUDO[@]} -gt 0 ]]; then
+    echo "==> Using sudo for package install and traffic control"
+else
+    echo "==> Running without sudo (MEMLORA_USE_SUDO / --no-sudo)"
+fi
 
-sudo apt-get update -qq
-sudo apt-get install -y python3-pip python3-venv iproute2 -qq
+"${SUDO[@]}" apt-get update -qq
+"${SUDO[@]}" apt-get install -y python3-pip python3-venv iproute2 -qq
 
 if [[ ! -d ~/venv ]]; then
     python3 -m venv ~/venv
@@ -136,10 +163,10 @@ EOF
 LAN_IFACE="enp65s0np0"
 LAN_IP=$(ip -4 addr show "$LAN_IFACE" | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
-sudo tc qdisc del dev "$LAN_IFACE" root 2>/dev/null || true
+"${SUDO[@]}" tc qdisc del dev "$LAN_IFACE" root 2>/dev/null || true
 
-sudo tc qdisc add dev "$LAN_IFACE" root handle 1: htb default 1
-sudo tc class add dev "$LAN_IFACE" parent 1: classid 1:1 htb rate 1gbit
+"${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" root handle 1: htb default 1
+"${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1: classid 1:1 htb rate 1gbit
 
 # Per-link shaping: deterministic from (src_idx, dst_idx) so any N works.
 _link_latency() {
@@ -175,13 +202,13 @@ for (( dst = 0; dst < NUM_NODES; dst++ )); do
     BW=$(_link_bw "$NODE_IDX" "$dst")
     LOSS=$(_link_loss "$NODE_IDX" "$dst")
 
-    sudo tc class add dev "$LAN_IFACE" parent 1:1 classid "$CLASS" \
+    "${SUDO[@]}" tc class add dev "$LAN_IFACE" parent 1:1 classid "$CLASS" \
         htb rate "$BW"
 
-    sudo tc qdisc add dev "$LAN_IFACE" parent "$CLASS" handle "${CLASS_ID}0:" \
+    "${SUDO[@]}" tc qdisc add dev "$LAN_IFACE" parent "$CLASS" handle "${CLASS_ID}0:" \
         netem delay "$LAT" loss "$LOSS"
 
-    sudo tc filter add dev "$LAN_IFACE" protocol ip parent 1: prio 1 \
+    "${SUDO[@]}" tc filter add dev "$LAN_IFACE" protocol ip parent 1: prio 1 \
         u32 match ip dst "$DST_IP/32" flowid "$CLASS"
 
     CLASS_ID=$((CLASS_ID + 1))
