@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+    echo "Usage: $0 NODE_IDX IP0 [IP1 ...]" >&2
+    echo "  NODE_IDX — 0-based index of this machine in the IP list" >&2
+    echo "  IPn      — LAN IPs of every node, same order on all hosts" >&2
+    echo "Example (3 nodes, this is node 1): $0 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
+    exit 1
+}
+
+[[ $# -lt 2 ]] && usage
+
 NODE_IDX=$1
-NODE0_IP=$2
-NODE1_IP=$3
-NODE2_IP=$4
-NODE3_IP=$5
+shift
+NODE_IPS=("$@")
+NUM_NODES=${#NODE_IPS[@]}
 
-NODE_IPS=("$NODE0_IP" "$NODE1_IP" "$NODE2_IP" "$NODE3_IP")
+if ! [[ "$NODE_IDX" =~ ^[0-9]+$ ]] || (( NODE_IDX < 0 || NODE_IDX >= NUM_NODES )); then
+    echo "Error: NODE_IDX must be an integer in [0, $((NUM_NODES - 1))] (got '$NODE_IDX')" >&2
+    exit 1
+fi
 
-case $NODE_IDX in
-    0) MY_IP=$NODE0_IP ;;
-    1) MY_IP=$NODE1_IP ;;
-    2) MY_IP=$NODE2_IP ;;
-    3) MY_IP=$NODE3_IP ;;
-    *) echo "Invalid node index"; exit 1 ;;
-esac
+MY_IP="${NODE_IPS[$NODE_IDX]}"
 
-echo "==> Setting up node$NODE_IDX (LAN IP: $MY_IP)"
+echo "==> Setting up node$NODE_IDX / $NUM_NODES nodes (LAN IP: $MY_IP)"
 
 sudo apt-get update -qq
 sudo apt-get install -y python3-pip python3-venv iproute2 -qq
@@ -71,11 +77,37 @@ from transformers import AutoModelForCausalLM
 ALL = [
     "crop_corn_disease","crop_wheat_disease","crop_soy_disease",
     "crop_tomato_disease","crop_cotton_disease","crop_general_health",
+    "crop_rice_disease","crop_barley_disease","crop_oat_disease",
+    "crop_potato_disease","crop_berry_disease","crop_grape_disease",
+    "crop_citrus_disease","crop_apple_disease","crop_peach_disease",
+    "crop_canola_disease","crop_sunflower_disease","crop_alfalfa_health",
+    "crop_pasture_health","crop_yield_pred_north","crop_yield_pred_south",
+    "crop_stress_heat","crop_stress_drought","crop_ndvi_zones",
+    "crop_growth_stage","crop_harvest_window",
     "pest_aphid","pest_rootworm","pest_spider_mite","pest_caterpillar","pest_general",
+    "pest_grasshopper","pest_weevil","pest_thrips","pest_whitefly","pest_cutworm",
+    "pest_borer","pest_leafhopper","pest_slug","pest_snail","pest_ant",
+    "pest_bee_health","pest_beneficial_count",
     "soil_nitrogen","soil_phosphorus","soil_moisture","soil_ph",
+    "soil_potassium","soil_organic_matter","soil_compaction",
+    "soil_salinity","soil_erosion_risk","soil_temp_root",
+    "soil_n_source","soil_microbiome","soil_carbon_estimate",
     "irrigation_zone_a","irrigation_zone_b","irrigation_zone_c","irrigation_zone_d",
+    "irrigation_zone_e","irrigation_zone_f","irrigation_sched_block1",
+    "irrigation_sched_block2","irrigation_drip_health","irrigation_sprinkler_uniform",
+    "irrigation_water_quality","irrigation_pressure","irrigation_flow_meter",
+    "irrigation_leak_detect",
     "weather_forecast","weather_frost_alert","weather_humidity",
+    "weather_wind_alert","weather_hail_risk","weather_precipitation",
+    "weather_heat_index","weather_dew_point","weather_soil_temp",
+    "weather_evapotranspiration",
     "equip_tractor","equip_drone","equip_sensor",
+    "equip_harvester","equip_planter","equip_sprayer",
+    "equip_baler","equip_spreader","equip_gps_guidance",
+    "equip_yield_monitor","equip_fuel_telemetry",
+    "livestock_cattle_health","livestock_poultry","livestock_pasture_rotation",
+    "dairy_milk_quality","dairy_feed_ration","grain_storage_temp",
+    "grain_moisture_bin","carbon_footprint_field","nutrient_runoff_risk",
 ]
 
 model_dir = os.path.expanduser("~/model_cache/Qwen2.5-0.5B-Instruct")
@@ -109,35 +141,45 @@ sudo tc qdisc del dev "$LAN_IFACE" root 2>/dev/null || true
 sudo tc qdisc add dev "$LAN_IFACE" root handle 1: htb default 1
 sudo tc class add dev "$LAN_IFACE" parent 1: classid 1:1 htb rate 1gbit
 
-declare -A LAT=(  ["0_1"]="10ms"  ["0_2"]="50ms" ["0_3"]="80ms"
-                  ["1_0"]="10ms"  ["1_2"]="40ms" ["1_3"]="30ms"
-                  ["2_0"]="50ms"  ["2_1"]="40ms" ["2_3"]="60ms"
-                  ["3_0"]="80ms"  ["3_1"]="30ms" ["3_2"]="60ms" )
+# Per-link shaping: deterministic from (src_idx, dst_idx) so any N works.
+_link_latency() {
+    local i=$1 j=$2
+    local d=$(( i > j ? i - j : j - i ))
+    local ms=$(( 10 + d * 30 + (i + j) * 5 ))
+    (( ms > 120 )) && ms=120
+    echo "${ms}ms"
+}
 
-declare -A BW=(   ["0_1"]="100mbit" ["0_2"]="20mbit"  ["0_3"]="10mbit"
-                  ["1_0"]="100mbit" ["1_2"]="25mbit"  ["1_3"]="50mbit"
-                  ["2_0"]="20mbit"  ["2_1"]="25mbit"  ["2_3"]="15mbit"
-                  ["3_0"]="10mbit"  ["3_1"]="50mbit"  ["3_2"]="15mbit" )
+_link_bw() {
+    local i=$1 j=$2
+    local d=$(( i > j ? i - j : j - i ))
+    local mb=$(( 100 - d * 25 ))
+    (( mb < 10 )) && mb=10
+    echo "${mb}mbit"
+}
 
-declare -A LOSS=( ["0_1"]="0%"  ["0_2"]="3%"  ["0_3"]="8%"
-                  ["1_0"]="0%"  ["1_2"]="2%"  ["1_3"]="1%"
-                  ["2_0"]="3%"  ["2_1"]="2%"  ["2_3"]="5%"
-                  ["3_0"]="8%"  ["3_1"]="1%"  ["3_2"]="5%" )
+_link_loss() {
+    local i=$1 j=$2
+    local p=$(( (i * 3 + j * 5 + i * j) % 9 ))
+    echo "${p}%"
+}
 
 CLASS_ID=10
 
-for dst in 0 1 2 3; do
-    [[ "$dst" == "$NODE_IDX" ]] && continue
+for (( dst = 0; dst < NUM_NODES; dst++ )); do
+    (( dst == NODE_IDX )) && continue
 
     DST_IP="${NODE_IPS[$dst]}"
-    KEY="${NODE_IDX}_${dst}"
     CLASS="1:$CLASS_ID"
+    LAT=$(_link_latency "$NODE_IDX" "$dst")
+    BW=$(_link_bw "$NODE_IDX" "$dst")
+    LOSS=$(_link_loss "$NODE_IDX" "$dst")
 
     sudo tc class add dev "$LAN_IFACE" parent 1:1 classid "$CLASS" \
-        htb rate "${BW[$KEY]}"
+        htb rate "$BW"
 
     sudo tc qdisc add dev "$LAN_IFACE" parent "$CLASS" handle "${CLASS_ID}0:" \
-        netem delay "${LAT[$KEY]}" loss "${LOSS[$KEY]}"
+        netem delay "$LAT" loss "$LOSS"
 
     sudo tc filter add dev "$LAN_IFACE" protocol ip parent 1: prio 1 \
         u32 match ip dst "$DST_IP/32" flowid "$CLASS"
@@ -159,11 +201,14 @@ done
 echo "==> node$NODE_IDX ready"
 
 
+PEERS_JSON=$(printf '"%s",' "${NODE_IPS[@]}")
+PEERS_JSON="[${PEERS_JSON%,}]"
+
 cat > ~/peers.json << PEERS
 {
-    "my_ip":   "$MY_IP",
+    "my_ip":    "$MY_IP",
     "node_idx": $NODE_IDX,
-    "peers": ["$NODE0_IP", "$NODE1_IP", "$NODE2_IP", "$NODE3_IP"]
+    "peers":    $PEERS_JSON
 }
 PEERS
 

@@ -30,6 +30,7 @@ class InferenceMixin:
         )
 
         lora_request = None
+        tier_before = None
         if adapter_name is not None:
             lora_path = os.path.join(ADAPTER_PATH, adapter_name)
             if not os.path.isdir(lora_path):
