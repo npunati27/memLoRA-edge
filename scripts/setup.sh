@@ -169,4 +169,4 @@ cat > ~/peers.json << PEERS
 PEERS
 
 echo "==> node$NODE_IDX ready — peers.json written"
-echo "    Run: python3 ~/memLoRA-edge/scripts/deploy.py"
+echo "    Run: cd ~/memLoRA-edge/scripts && python3 -m deploy"

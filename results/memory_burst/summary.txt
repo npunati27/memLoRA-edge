@@ -1,0 +1,30 @@
+============================================================
+Results: mode=burst routing=memory-aware node=http://10.10.1.1:5000
+============================================================
+  Total requests:  479
+  Successful:      479
+  Failed:          0
+  Latency p50:     502ms
+  Latency p95:     1653ms
+  Latency p99:     2912ms
+  Latency mean:    683ms
+
+  Per-adapter mean latency (top 10 by request count):
+    equip_tractor                       n=  60  p50=   674ms  [DISK]
+    irrigation_zone_a                   n=  40  p50=   313ms  [DISK]
+    weather_frost_alert                 n=  40  p50=   973ms  [DISK]
+    irrigation_zone_b                   n=  40  p50=   477ms  [DISK]
+    crop_wheat_disease                  n=  40  p50=   786ms  [GPU]
+    pest_rootworm                       n=  40  p50=   315ms  [CPU]
+    pest_spider_mite                    n=  39  p50=   312ms  [CPU]
+    soil_moisture                       n=  20  p50=   312ms  [DISK]
+    soil_ph                             n=  20  p50=   312ms  [DISK]
+    soil_phosphorus                     n=  20  p50=   607ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 108 (22.5%)
+    10.10.1.2: 172 (35.9%)
+    10.10.1.3: 96 (20.0%)
+    10.10.1.4: 103 (21.5%)
+
+Results saved to results.jsonl

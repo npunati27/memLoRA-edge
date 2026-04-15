@@ -1,0 +1,30 @@
+============================================================
+Results: mode=uniform routing=baseline node=http://10.10.1.1:5000
+============================================================
+  Total requests:  478
+  Successful:      478
+  Failed:          0
+  Latency p50:     1539ms
+  Latency p95:     4577ms
+  Latency p99:     5965ms
+  Latency mean:    1846ms
+
+  Per-adapter mean latency (top 10 by request count):
+    equip_drone                         n=  27  p50=  1443ms  [DISK]
+    weather_forecast                    n=  26  p50=  1580ms  [DISK]
+    crop_wheat_disease                  n=  25  p50=  1599ms  [GPU]
+    equip_sensor                        n=  24  p50=  1416ms  [DISK]
+    soil_moisture                       n=  24  p50=  1971ms  [DISK]
+    pest_rootworm                       n=  23  p50=  1643ms  [CPU]
+    soil_nitrogen                       n=  23  p50=  1513ms  [DISK]
+    pest_spider_mite                    n=  22  p50=  1445ms  [CPU]
+    crop_general_health                 n=  22  p50=  1788ms  [CPU]
+    weather_humidity                    n=  20  p50=  1694ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 40 (8.4%)
+    10.10.1.2: 156 (32.6%)
+    10.10.1.3: 126 (26.4%)
+    10.10.1.4: 156 (32.6%)
+
+Results saved to results.jsonl
