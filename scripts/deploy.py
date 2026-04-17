@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import os, time, requests, uuid, asyncio, json, random, logging, traceback
 from collections import OrderedDict

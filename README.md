@@ -37,9 +37,12 @@ Optional: traffic shaping with `tc` (see script `--help` and `MEMLORA_ENABLE_TC`
 Activate the venv (`source ~/venv/bin/activate`), go to the repo, and start the server:
 
 ```bash
-# From repository root (recommended)
+# From repository root (the directory that contains the `scripts/` folder)
+cd ~/memLoRA-edge   # example
 python -m scripts.deploy
 ```
+
+Running from inside `scripts/` (`cd scripts` then `python -m scripts.deploy`) will fail with `No module named 'scripts'` because Python needs the **parent** of `scripts` on the import path.
 
 If your `PYTHONPATH` is the `scripts/` directory only:
 
