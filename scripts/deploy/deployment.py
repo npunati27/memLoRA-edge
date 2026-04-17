@@ -4,6 +4,7 @@ import asyncio
 import traceback
 from collections import OrderedDict
 from contextlib import asynccontextmanager
+from typing import Any, Callable
 
 from fastapi import FastAPI
 from starlette.requests import Request
@@ -13,7 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 from .config import (
     LOG_DIR, MODEL_PATH,
     MAX_GPU_LORA, MAX_CPU_LORA, SERVE_PORT,
-    ROUTING_MODE, logger,
+    ROUTING_MODE, USE_MOCK_ENGINE, logger,
     load_peer_config, get_lora_names,
 )
 from .metrics import MetricsLogger
@@ -89,245 +90,253 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
         self._gossip_running = False
 
 
-engine_node: MemLoRAEngine | None = None
+def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
+    """Build the FastAPI app. Routes are identical for GPU and mock; only the engine differs.
 
+    If ``engine_class`` is omitted, ``MEMLORA_MOCK=1`` selects :class:`MockMemLoRAEngine`;
+    otherwise :class:`MemLoRAEngine` (vLLM). Pass a class explicitly to override env (tests).
+    """
+    if engine_class is None:
+        if USE_MOCK_ENGINE:
+            from .mock_engine import MockMemLoRAEngine
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global engine_node
-    engine_node = MemLoRAEngine()
-    engine_node._start_gossip_loop()
-    yield
-    await engine_node._stop_gossip_loop()
+            engine_class = MockMemLoRAEngine
+        else:
+            engine_class = MemLoRAEngine
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        app.state.engine = engine_class()
+        app.state.engine._start_gossip_loop()
+        yield
+        await app.state.engine._stop_gossip_loop()
 
-app = FastAPI(lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
-)
-
-
-# ── Internal endpoints ────────────────────────────────────────────────────────
-
-@app.post("/internal/gossip")
-async def receive_gossip(request: Request):
-    body = await request.json()
-    msg_type = body.get("type")
-    if msg_type == "queue_length":
-        engine_node._handle_queue_gossip(body)
-    elif msg_type == "adapter_state":
-        engine_node._handle_adapter_state_gossip(body)
-    return JSONResponse({"ok": True})
-
-
-@app.get("/internal/queue")
-async def get_queue_length():
-    return JSONResponse({
-        "node": engine_node.my_ip,
-        "queue_len": engine_node._ongoing,
-        "ts": time.time(),
-    })
-
-
-@app.post("/internal/chat/completions")
-async def internal_chat_completions(request: Request):
-    logger.info(
-        f"[endpoint] /internal/chat/completions from "
-        f"{request.client.host if request.client else 'unknown'}"
-    )
-    try:
-        parsed = await engine_node._parse_inference_request(request)
-    except ValueError as e:
-        logger.error(f"[endpoint] /internal/chat/completions parse error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=400)
-    return await engine_node._serve_local_chat_request(parsed)
-
-
-# ── Public endpoints ──────────────────────────────────────────────────────────
-
-@app.post("/v1/chat/completions")
-async def chat_completions(request: Request):
-    e2e_start = time.perf_counter()
-    logger.info(
-        f"[endpoint] /v1/chat/completions from "
-        f"{request.client.host if request.client else 'unknown'}"
+    app = FastAPI(lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
     )
 
-    try:
-        parsed = await engine_node._parse_inference_request(request)
-    except Exception as e:
-        logger.error(f"[endpoint] parse error: {e}\n{traceback.format_exc()}")
-        return JSONResponse({"error": str(e)}, status_code=400)
+    @app.post("/internal/gossip")
+    async def receive_gossip(request: Request):
+        e = request.app.state.engine
+        body = await request.json()
+        msg_type = body.get("type")
+        if msg_type == "queue_length":
+            e._handle_queue_gossip(body)
+        elif msg_type == "adapter_state":
+            e._handle_adapter_state_gossip(body)
+        return JSONResponse({"ok": True})
 
-    request_id = parsed["request_id"]
-    adapter_name = parsed["adapter_name"]
+    @app.get("/internal/queue")
+    async def get_queue_length(request: Request):
+        e = request.app.state.engine
+        return JSONResponse({
+            "node": e.my_ip,
+            "queue_len": e._ongoing,
+            "ts": time.time(),
+        })
 
-    routing_start = time.perf_counter()
-    if ROUTING_MODE == "memory":
-        target_ip = engine_node._choose_target_node_memory(adapter_name, parsed["client_ip"])
-    else:
-        target_ip = engine_node._choose_target_node_baseline(adapter_name, parsed["client_ip"])
-    routing_time_ms = (time.perf_counter() - routing_start) * 1000
-
-    is_local = target_ip == engine_node.my_ip
-    reason = "local" if is_local else "forwarded"
-    logger.info(
-        f"[routing] request_id={request_id} adapter={adapter_name} "
-        f"target={target_ip} reason={reason}"
-    )
-    engine_node.metrics.log(
-        "routing_decision",
-        request_id=request_id,
-        adapter=adapter_name,
-        target_node=target_ip,
-        reason=reason,
-        decision_time_ms=routing_time_ms,
-    )
-
-    if is_local:
-        response = await engine_node._serve_local_chat_request(parsed)
-    else:
-        body = dict(parsed["raw_body"])
-        body["_client_ip"] = parsed["client_ip"]
-        body["_sender_ip"] = engine_node.my_ip
-        body["_forward_path"] = parsed["forward_path"] + [engine_node.my_ip]
-        response = await engine_node._forward_chat_request(target_ip, body, request_id)
-
-    e2e_time_ms = (time.perf_counter() - e2e_start) * 1000
-    logger.info(
-        f"[e2e] request_id={request_id} status={response.status_code} "
-        f"total_ms={e2e_time_ms:.1f} forwarded={not is_local} served_by={target_ip}"
-    )
-    engine_node.metrics.log(
-        "e2e_latency",
-        request_id=request_id,
-        total_ms=e2e_time_ms,
-        was_forwarded=not is_local,
-        served_by=target_ip,
-    )
-    return response
-
-
-@app.get("/v1/models")
-async def list_models():
-    models = [{"id": engine_node.model_id, "object": "model"}]
-    for name in engine_node.lora_names:
-        models.append({"id": f"{engine_node.model_id}/{name}", "object": "model"})
-    return JSONResponse({"object": "list", "data": models})
-
-
-@app.get("/health")
-async def health():
-    if engine_node._gossip_task is None and not engine_node._gossip_running:
-        engine_node._gossip_running = True
-        engine_node._gossip_task = asyncio.create_task(engine_node._gossip_queue_loop())
-        logger.info("[gossip] Started gossip loop lazily on first health check")
-    return JSONResponse({
-        "status": "ok", "node": engine_node.my_ip, "ongoing": engine_node._ongoing,
-    })
-
-
-# ── Debug endpoints ───────────────────────────────────────────────────────────
-
-@app.get("/internal/debug/state")
-async def debug_state():
-    return JSONResponse({
-        "node": engine_node.my_ip,
-        "local_queue": engine_node._ongoing,
-        "peer_queues": engine_node._peer_queue_lengths,
-        "peer_timestamps": engine_node._peer_queue_timestamps,
-        "local_adapters": {
-            "gpu": list(engine_node._local_gpu_lru.keys()),
-            "cpu": list(engine_node._local_cpu_lru.keys()),
-        },
-        "adapter_state": {
-            adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
-            for adapter, tiers in engine_node._peer_adapter_state.items()
-        },
-        "gossip_running": engine_node._gossip_running,
-        "gossip_task_active": (
-            engine_node._gossip_task is not None and not engine_node._gossip_task.done()
-        ),
-    })
-
-
-@app.get("/internal/logs")
-async def get_logs(lines: int = 80):
-    log_path = os.path.join(LOG_DIR, "deploy.log")
-    try:
-        with open(log_path, "r") as f:
-            all_lines = f.readlines()
-        tail = all_lines[-lines:] if len(all_lines) > lines else all_lines
-        return JSONResponse({"node": engine_node.my_ip, "lines": [l.rstrip() for l in tail]})
-    except FileNotFoundError:
-        return JSONResponse({"node": engine_node.my_ip, "lines": []})
-
-
-@app.get("/internal/cluster")
-async def cluster_state():
-    import aiohttp
-
-    nodes = {}
-    log_lines = []
-    log_path = os.path.join(LOG_DIR, "deploy.log")
-    try:
-        with open(log_path, "r") as f:
-            raw = f.readlines()
-        log_lines = [l.rstrip() for l in raw[-80:]]
-    except Exception:
-        pass
-
-    nodes[engine_node.my_ip] = {
-        "node": engine_node.my_ip,
-        "status": "ok",
-        "local_queue": engine_node._ongoing,
-        "peer_queues": dict(engine_node._peer_queue_lengths),
-        "peer_timestamps": dict(engine_node._peer_queue_timestamps),
-        "local_adapters": {
-            "gpu": list(engine_node._local_gpu_lru.keys()),
-            "cpu": list(engine_node._local_cpu_lru.keys()),
-        },
-        "adapter_state": {
-            a: {t: list(n) for t, n in tiers.items()}
-            for a, tiers in engine_node._peer_adapter_state.items()
-        },
-        "gossip_running": engine_node._gossip_running,
-        "gossip_task_active": (
-            engine_node._gossip_task is not None and not engine_node._gossip_task.done()
-        ),
-        "logs": log_lines,
-    }
-
-    async def fetch_peer(peer_ip):
+    @app.post("/internal/chat/completions")
+    async def internal_chat_completions(request: Request):
+        e = request.app.state.engine
+        logger.info(
+            f"[endpoint] /internal/chat/completions from "
+            f"{request.client.host if request.client else 'unknown'}"
+        )
         try:
-            session = await engine_node._ensure_session()
-            async with session.get(
-                f"http://{peer_ip}:{SERVE_PORT}/internal/debug/state",
-                timeout=aiohttp.ClientTimeout(total=2),
-            ) as resp:
-                state = await resp.json()
-            async with session.get(
-                f"http://{peer_ip}:{SERVE_PORT}/internal/logs?lines=80",
-                timeout=aiohttp.ClientTimeout(total=2),
-            ) as resp:
-                logs_data = await resp.json()
-            state["status"] = "ok"
-            state["logs"] = logs_data.get("lines", [])
-            return peer_ip, state
-        except Exception as e:
-            return peer_ip, {
-                "node": peer_ip, "status": "unreachable",
-                "local_queue": None, "peer_queues": {},
-                "local_adapters": {"gpu": [], "cpu": []},
-                "gossip_running": False, "gossip_task_active": False,
-                "adapter_state": {}, "logs": [], "error": str(e),
-            }
+            parsed = await e._parse_inference_request(request)
+        except ValueError as err:
+            logger.error(f"[endpoint] /internal/chat/completions parse error: {err}")
+            return JSONResponse({"error": str(err)}, status_code=400)
+        return await e._serve_local_chat_request(parsed)
 
-    tasks = [fetch_peer(ip) for ip in engine_node.peer_ips if ip != engine_node.my_ip]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for result in results:
-        if isinstance(result, tuple):
-            ip, data = result
-            nodes[ip] = data
+    @app.post("/v1/chat/completions")
+    async def chat_completions(request: Request):
+        e = request.app.state.engine
+        e2e_start = time.perf_counter()
+        logger.info(
+            f"[endpoint] /v1/chat/completions from "
+            f"{request.client.host if request.client else 'unknown'}"
+        )
 
-    return JSONResponse({"ts": time.time(), "source_node": engine_node.my_ip, "nodes": nodes})
+        try:
+            parsed = await e._parse_inference_request(request)
+        except Exception as err:
+            logger.error(f"[endpoint] parse error: {err}\n{traceback.format_exc()}")
+            return JSONResponse({"error": str(err)}, status_code=400)
+
+        request_id = parsed["request_id"]
+        adapter_name = parsed["adapter_name"]
+
+        routing_start = time.perf_counter()
+        if ROUTING_MODE == "memory":
+            target_ip = e._choose_target_node_memory(adapter_name, parsed["client_ip"])
+        else:
+            target_ip = e._choose_target_node_baseline(adapter_name, parsed["client_ip"])
+        routing_time_ms = (time.perf_counter() - routing_start) * 1000
+
+        is_local = target_ip == e.my_ip
+        reason = "local" if is_local else "forwarded"
+        logger.info(
+            f"[routing] request_id={request_id} adapter={adapter_name} "
+            f"target={target_ip} reason={reason}"
+        )
+        e.metrics.log(
+            "routing_decision",
+            request_id=request_id,
+            adapter=adapter_name,
+            target_node=target_ip,
+            reason=reason,
+            decision_time_ms=routing_time_ms,
+        )
+
+        if is_local:
+            response = await e._serve_local_chat_request(parsed)
+        else:
+            body = dict(parsed["raw_body"])
+            body["_client_ip"] = parsed["client_ip"]
+            body["_sender_ip"] = e.my_ip
+            body["_forward_path"] = parsed["forward_path"] + [e.my_ip]
+            response = await e._forward_chat_request(target_ip, body, request_id)
+
+        e2e_time_ms = (time.perf_counter() - e2e_start) * 1000
+        logger.info(
+            f"[e2e] request_id={request_id} status={response.status_code} "
+            f"total_ms={e2e_time_ms:.1f} forwarded={not is_local} served_by={target_ip}"
+        )
+        e.metrics.log(
+            "e2e_latency",
+            request_id=request_id,
+            total_ms=e2e_time_ms,
+            was_forwarded=not is_local,
+            served_by=target_ip,
+        )
+        return response
+
+    @app.get("/v1/models")
+    async def list_models(request: Request):
+        e = request.app.state.engine
+        models = [{"id": e.model_id, "object": "model"}]
+        for name in e.lora_names:
+            models.append({"id": f"{e.model_id}/{name}", "object": "model"})
+        return JSONResponse({"object": "list", "data": models})
+
+    @app.get("/health")
+    async def health(request: Request):
+        e = request.app.state.engine
+        if e._gossip_task is None and not e._gossip_running:
+            e._gossip_running = True
+            e._gossip_task = asyncio.create_task(e._gossip_queue_loop())
+            logger.info("[gossip] Started gossip loop lazily on first health check")
+        return JSONResponse({
+            "status": "ok", "node": e.my_ip, "ongoing": e._ongoing,
+        })
+
+    @app.get("/internal/debug/state")
+    async def debug_state(request: Request):
+        e = request.app.state.engine
+        return JSONResponse({
+            "node": e.my_ip,
+            "local_queue": e._ongoing,
+            "peer_queues": e._peer_queue_lengths,
+            "peer_timestamps": e._peer_queue_timestamps,
+            "local_adapters": {
+                "gpu": list(e._local_gpu_lru.keys()),
+                "cpu": list(e._local_cpu_lru.keys()),
+            },
+            "adapter_state": {
+                adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
+                for adapter, tiers in e._peer_adapter_state.items()
+            },
+            "gossip_running": e._gossip_running,
+            "gossip_task_active": (
+                e._gossip_task is not None and not e._gossip_task.done()
+            ),
+        })
+
+    @app.get("/internal/logs")
+    async def get_logs(request: Request, lines: int = 80):
+        e = request.app.state.engine
+        log_path = os.path.join(LOG_DIR, "deploy.log")
+        try:
+            with open(log_path, "r") as f:
+                all_lines = f.readlines()
+            tail = all_lines[-lines:] if len(all_lines) > lines else all_lines
+            return JSONResponse({"node": e.my_ip, "lines": [l.rstrip() for l in tail]})
+        except FileNotFoundError:
+            return JSONResponse({"node": e.my_ip, "lines": []})
+
+    @app.get("/internal/cluster")
+    async def cluster_state(request: Request):
+        import aiohttp
+
+        e = request.app.state.engine
+        nodes = {}
+        log_lines = []
+        log_path = os.path.join(LOG_DIR, "deploy.log")
+        try:
+            with open(log_path, "r") as f:
+                raw = f.readlines()
+            log_lines = [l.rstrip() for l in raw[-80:]]
+        except Exception:
+            pass
+
+        nodes[e.my_ip] = {
+            "node": e.my_ip,
+            "status": "ok",
+            "local_queue": e._ongoing,
+            "peer_queues": dict(e._peer_queue_lengths),
+            "peer_timestamps": dict(e._peer_queue_timestamps),
+            "local_adapters": {
+                "gpu": list(e._local_gpu_lru.keys()),
+                "cpu": list(e._local_cpu_lru.keys()),
+            },
+            "adapter_state": {
+                a: {t: list(n) for t, n in tiers.items()}
+                for a, tiers in e._peer_adapter_state.items()
+            },
+            "gossip_running": e._gossip_running,
+            "gossip_task_active": (
+                e._gossip_task is not None and not e._gossip_task.done()
+            ),
+            "logs": log_lines,
+        }
+
+        async def fetch_peer(peer_ip):
+            try:
+                session = await e._ensure_session()
+                async with session.get(
+                    f"http://{peer_ip}:{SERVE_PORT}/internal/debug/state",
+                    timeout=aiohttp.ClientTimeout(total=2),
+                ) as resp:
+                    state = await resp.json()
+                async with session.get(
+                    f"http://{peer_ip}:{SERVE_PORT}/internal/logs?lines=80",
+                    timeout=aiohttp.ClientTimeout(total=2),
+                ) as resp:
+                    logs_data = await resp.json()
+                state["status"] = "ok"
+                state["logs"] = logs_data.get("lines", [])
+                return peer_ip, state
+            except Exception as err:
+                return peer_ip, {
+                    "node": peer_ip, "status": "unreachable",
+                    "local_queue": None, "peer_queues": {},
+                    "local_adapters": {"gpu": [], "cpu": []},
+                    "gossip_running": False, "gossip_task_active": False,
+                    "adapter_state": {}, "logs": [], "error": str(err),
+                }
+
+        tasks = [fetch_peer(ip) for ip in e.peer_ips if ip != e.my_ip]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, tuple):
+                ip, data = result
+                nodes[ip] = data
+
+        return JSONResponse({"ts": time.time(), "source_node": e.my_ip, "nodes": nodes})
+
+    return app
+
+
+app = create_app()

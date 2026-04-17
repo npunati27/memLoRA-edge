@@ -7,6 +7,8 @@ LOG_DIR = os.path.join(HOME, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
 ROUTING_MODE = os.getenv("ROUTING_MODE", "baseline").strip().lower()
+# CPU mock: same HTTP app/routes/gossip as GPU; no vLLM. Set before importing deployment.
+USE_MOCK_ENGINE = os.getenv("MEMLORA_MOCK", "").strip().lower() in ("1", "true", "yes")
 TIER_RANK = {"gpu": 0, "cpu": 1, "disk": 2}
 
 logging.basicConfig(
