@@ -44,8 +44,39 @@ MY_IP="${NODE_IPS[$NODE_IDX]}"
 
 echo "==> Mock VM setup: node $NODE_IDX / $NUM_NODES (my_ip=$MY_IP)"
 
-"${SUDO[@]}" apt-get update -qq
-"${SUDO[@]}" apt-get install -y python3-pip python3-venv git -qq
+install_base_packages() {
+    if [[ ! -f /etc/os-release ]]; then
+        echo "No /etc/os-release; install python3, pip, and git yourself, then re-run." >&2
+        exit 1
+    fi
+    # shellcheck source=/dev/null
+    . /etc/os-release
+    local rh=0
+    case " ${ID_LIKE:-} " in
+        *" rhel "*|*" fedora "*|*" centos "*) rh=1 ;;
+    esac
+    case "${ID:-}" in
+        rhel|fedora|centos|rocky|almalinux|ol|amzn|scientific) rh=1 ;;
+    esac
+    if [[ "$rh" -eq 1 ]]; then
+        echo "==> Detected Red Hat family (ID=$ID); using dnf or yum"
+        if command -v dnf >/dev/null 2>&1; then
+            "${SUDO[@]}" dnf install -y python3 python3-pip git
+        else
+            "${SUDO[@]}" yum install -y python3 python3-pip git
+        fi
+    elif [[ "${ID:-}" == "debian" || "${ID:-}" == "ubuntu" ]] \
+        || [[ " ${ID_LIKE:-} " == *" debian "* ]]; then
+        echo "==> Detected Debian family (ID=$ID); using apt"
+        "${SUDO[@]}" apt-get update -qq
+        "${SUDO[@]}" apt-get install -y python3-pip python3-venv git -qq
+    else
+        echo "Unsupported OS ID='${ID:-}' ID_LIKE='${ID_LIKE:-}'. Install python3, python3-pip, git; then re-run." >&2
+        exit 1
+    fi
+}
+
+install_base_packages
 
 if [[ ! -d ~/venv ]]; then
     python3 -m venv ~/venv

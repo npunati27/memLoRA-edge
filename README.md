@@ -85,14 +85,20 @@ You still need **`~/peers.json`** (same shape as the GPU setup) so peers can gos
 
 ## Empty Linux VM (no GPU) — step by step
 
-Do this on **each** CPU VM. Use the **same ordered IP list** on every machine; only `NODE_IDX` changes per host.
+Do this on **each** CPU VM. Use the **same ordered peer list** (private IPs or resolvable hostnames) on every machine; only `NODE_IDX` changes per host.
 
-1. **SSH in** (Ubuntu/Debian-style examples below).
+`scripts/setup-mock-vm.sh` detects the OS from `/etc/os-release`: **Debian/Ubuntu** use `apt`; **RHEL, Rocky, Alma, Fedora, CentOS Stream, Oracle Linux, Amazon Linux** use `dnf` or `yum`.
 
-2. **Install git** (if the image is bare):
+1. **SSH in** to the VM.
+
+2. **Install git** only if you need it before clone and do not want to rely on the setup script yet:
 
    ```bash
+   # Debian / Ubuntu
    sudo apt-get update && sudo apt-get install -y git
+
+   # Red Hat family (RHEL, Rocky, Alma, Fedora, …)
+   sudo dnf install -y git    # or: sudo yum install -y git
    ```
 
 3. **Clone the repo** (HTTPS or SSH URL):
@@ -115,12 +121,16 @@ Do this on **each** CPU VM. Use the **same ordered IP list** on every machine; o
    bash scripts/setup-mock-vm.sh 2 10.0.0.1 10.0.0.2 10.0.0.3
    ```
 
-   This installs `python3-venv`, creates **`~/venv`**, installs **FastAPI / uvicorn / aiohttp** only (no PyTorch or vLLM), creates **`~/logs`** and **`~/adapters`**, and writes **`~/peers.json`**.
+   This installs Python 3 + pip + git (via **apt** or **dnf/yum**), creates **`~/venv`**, installs **FastAPI / uvicorn / aiohttp** only (no PyTorch or vLLM), creates **`~/logs`** and **`~/adapters`**, and writes **`~/peers.json`**.
 
-5. **Open the API port** if you use a firewall (default port **5000**):
+5. **Open the API port** if a firewall is on (default **5000/tcp**):
 
    ```bash
-   sudo ufw allow 5000/tcp   # only if ufw is enabled
+   # Ubuntu (ufw)
+   sudo ufw allow 5000/tcp
+
+   # Red Hat (firewalld — common on RHEL / Rocky classroom images)
+   sudo firewall-cmd --permanent --add-port=5000/tcp && sudo firewall-cmd --reload
    ```
 
 6. **Start the mock API** (always set the flag on machines without a GPU):
