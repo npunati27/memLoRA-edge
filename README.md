@@ -82,3 +82,74 @@ Tuning (environment variables; defaults live in `scripts/deploy/mock_settings.py
 | `MEMLORA_MOCK_SKIP_ADAPTER_CHECK` | `1` to skip on-disk adapter paths (default on) |
 
 You still need **`~/peers.json`** (same shape as the GPU setup) so peers can gossip and `/internal/cluster` can fan out.
+
+## Empty Linux VM (no GPU) — step by step
+
+Do this on **each** CPU VM. Use the **same ordered IP list** on every machine; only `NODE_IDX` changes per host.
+
+1. **SSH in** (Ubuntu/Debian-style examples below).
+
+2. **Install git** (if the image is bare):
+
+   ```bash
+   sudo apt-get update && sudo apt-get install -y git
+   ```
+
+3. **Clone the repo** (HTTPS or SSH URL):
+
+   ```bash
+   git clone https://github.com/<you>/memLoRA-edge.git
+   cd memLoRA-edge
+   ```
+
+4. **Run the mock setup script** from the repo root.  
+   Arguments: **this node’s 0-based index**, then **all cluster IPs in the same order on every VM**:
+
+   ```bash
+   bash scripts/setup-mock-vm.sh <NODE_IDX> <IP0> <IP1> ... <IP19>
+   ```
+
+   Example: you are node `2` in a three-node test:
+
+   ```bash
+   bash scripts/setup-mock-vm.sh 2 10.0.0.1 10.0.0.2 10.0.0.3
+   ```
+
+   This installs `python3-venv`, creates **`~/venv`**, installs **FastAPI / uvicorn / aiohttp** only (no PyTorch or vLLM), creates **`~/logs`** and **`~/adapters`**, and writes **`~/peers.json`**.
+
+5. **Open the API port** if you use a firewall (default port **5000**):
+
+   ```bash
+   sudo ufw allow 5000/tcp   # only if ufw is enabled
+   ```
+
+6. **Start the mock API** (always set the flag on machines without a GPU):
+
+   ```bash
+   source ~/venv/bin/activate
+   cd ~/memLoRA-edge    # or wherever you cloned
+   export MEMLORA_MOCK=1
+   python -m scripts.deploy
+   ```
+
+   Equivalent:
+
+   ```bash
+   source ~/venv/bin/activate
+   cd ~/memLoRA-edge
+   python -m scripts.deploy.mock_main
+   ```
+
+7. **Smoke test** from the same machine:
+
+   ```bash
+   curl -s http://127.0.0.1:5000/health
+   ```
+
+   From another VM (replace IP):
+
+   ```bash
+   curl -s http://10.0.0.2:5000/health
+   ```
+
+Repeat steps 3–6 on each VM with the correct **`NODE_IDX`** and identical IP list. If anything fails to import, run from the **repository root** so `python -m scripts.deploy` can resolve the `scripts.deploy` package.
