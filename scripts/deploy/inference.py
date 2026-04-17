@@ -7,8 +7,8 @@ from starlette.responses import JSONResponse
 from vllm import SamplingParams
 from vllm.lora.request import LoRARequest
 
-from .config import ADAPTER_PATH, SERVE_PORT, logger
-
+from .config import ADAPTER_PATH, SERVE_PORT, logger, USE_S3_ADAPTERS
+from .s3_adapter import download_adapter_from_s3
 
 class InferenceMixin:
     """Local inference execution and request forwarding."""
@@ -33,15 +33,35 @@ class InferenceMixin:
         tier_before = None
         if adapter_name is not None:
             lora_path = os.path.join(ADAPTER_PATH, adapter_name)
-            if not os.path.isdir(lora_path):
-                logger.error(
-                    f"[inference] request_id={request_id} "
-                    f"adapter path not found: {lora_path}"
-                )
-                return JSONResponse(
-                    {"error": f"Adapter '{adapter_name}' not found at {lora_path}"},
-                    status_code=400,
-                )
+            if not os.path.isdir(lora_path) and USE_S3_ADAPTERS:
+                try:
+                    logger.info(
+                        f"[inference] request_id={request_id} "
+                        f"Adapter not cached locally, downloading from S3: {adapter_name}"
+                    )
+                    lora_path = await asyncio.to_thread(download_adapter_from_s3, adapter_name)
+                    logger.info(
+                        f"[inference] request_id={request_id} "
+                        f"Successfully downloaded adapter: {adapter_name}"
+                    )
+                except FileNotFoundError as e:
+                    logger.error(
+                        f"[inference] request_id={request_id} "
+                        f"Adapter not found in S3: {adapter_name} error={e}"
+                    )
+                    return JSONResponse(
+                        {"error": f"Adapter '{adapter_name}' not found locally or in S3"},
+                        status_code=404,
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"[inference] request_id={request_id} "
+                        f"Failed to download adapter from S3: {e}"
+                    )
+                    return JSONResponse(
+                        {"error": f"Failed to load adapter '{adapter_name}' from S3: {str(e)}"},
+                        status_code=500,
+                    )
             lora_request = LoRARequest(
                 lora_name=adapter_name,
                 lora_int_id=abs(hash(adapter_name)) % (2**31),
