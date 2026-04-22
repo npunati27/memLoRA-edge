@@ -84,6 +84,31 @@ Tuning (environment variables; defaults live in `scripts/deploy/mock_settings.py
 | `MEMLORA_MOCK_LORA_NAMES` | Comma-separated adapter names if `~/adapters` is empty |
 | `MEMLORA_MOCK_SKIP_ADAPTER_CHECK` | `1` to skip on-disk adapter paths (default on) |
 
+Persistent config file option: edit `scripts/deploy/defaults.py` to set project defaults
+for mock latency/response and tier-transition emulation without exporting env vars each run.
+Environment variables still take precedence when set.
+
+### Tier Transition Latency Emulation (mock only)
+
+You can inject per-transition adapter movement latency (milliseconds) during local LRU tier changes:
+
+- `MEMLORA_DELAY_DISK_TO_GPU_MS`
+- `MEMLORA_DELAY_CPU_TO_GPU_MS`
+- `MEMLORA_DELAY_GPU_TO_CPU_MS`
+- `MEMLORA_DELAY_CPU_TO_DISK_MS`
+- `MEMLORA_DELAY_DISK_TO_CPU_MS`
+- `MEMLORA_DELAY_GPU_TO_DISK_MS`
+
+Example:
+
+```bash
+export MEMLORA_DELAY_DISK_TO_GPU_MS=120
+export MEMLORA_DELAY_CPU_TO_DISK_MS=40
+```
+
+These delays apply in `MEMLORA_MOCK=1` mode when requests trigger tier transitions and are recorded as
+`tier_transition_latency` events in metrics logs.
+
 You still need **`~/peers.json`** (same shape as the GPU setup) so peers can gossip and `/internal/cluster` can fan out.
 
 ## Empty Linux VM (no GPU) — step by step

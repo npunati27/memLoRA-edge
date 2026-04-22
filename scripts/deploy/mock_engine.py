@@ -64,6 +64,31 @@ class MockInferenceMixin:
         inf_start = time.perf_counter()
         tokens_generated = 0
         try:
+            if adapter_name is not None and changes:
+                transition_delay_ms, transition_details = self._sum_transition_delay(changes)
+                if transition_delay_ms > 0:
+                    logger.info(
+                        f"[mock-emulation] request_id={request_id} "
+                        f"tier_delay_ms={transition_delay_ms} details={transition_details}"
+                    )
+                    self.metrics.log(
+                        "tier_transition_latency",
+                        request_id=request_id,
+                        adapter=adapter_name,
+                        total_delay_ms=transition_delay_ms,
+                        details=[
+                            {
+                                "adapter": a,
+                                "old_tier": o,
+                                "new_tier": n,
+                                "delay_ms": d,
+                            }
+                            for a, o, n, d in transition_details
+                        ],
+                        mock=True,
+                    )
+                    await asyncio.sleep(transition_delay_ms / 1000.0)
+
             delay_ms = ms.MOCK_INFERENCE_DELAY_MS
             if ms.MOCK_INFERENCE_JITTER_MS > 0:
                 delay_ms += random.randint(0, ms.MOCK_INFERENCE_JITTER_MS)

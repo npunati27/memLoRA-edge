@@ -1,6 +1,14 @@
 import os
 import json
 import logging
+from .defaults import (
+    DEFAULT_DELAY_DISK_TO_GPU_MS,
+    DEFAULT_DELAY_CPU_TO_GPU_MS,
+    DEFAULT_DELAY_GPU_TO_CPU_MS,
+    DEFAULT_DELAY_CPU_TO_DISK_MS,
+    DEFAULT_DELAY_DISK_TO_CPU_MS,
+    DEFAULT_DELAY_GPU_TO_DISK_MS,
+)
 
 HOME = os.path.expanduser("~")
 LOG_DIR = os.path.join(HOME, "logs")
@@ -27,6 +35,27 @@ PEERS_FILE = os.path.expanduser("~/peers.json")
 MAX_GPU_LORA = 3
 MAX_CPU_LORA = 6
 SERVE_PORT = 5000
+
+
+def _env_nonneg_int(name: str, default: int = 0) -> int:
+    raw = os.getenv(name, str(default)).strip()
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if value >= 0 else default
+
+
+# Optional emulated latency per adapter tier transition (milliseconds).
+# This is applied when LRU causes local tier changes during request handling.
+TIER_TRANSITION_DELAY_MS = {
+    ("disk", "gpu"): _env_nonneg_int("MEMLORA_DELAY_DISK_TO_GPU_MS", DEFAULT_DELAY_DISK_TO_GPU_MS),
+    ("cpu", "gpu"): _env_nonneg_int("MEMLORA_DELAY_CPU_TO_GPU_MS", DEFAULT_DELAY_CPU_TO_GPU_MS),
+    ("gpu", "cpu"): _env_nonneg_int("MEMLORA_DELAY_GPU_TO_CPU_MS", DEFAULT_DELAY_GPU_TO_CPU_MS),
+    ("cpu", "disk"): _env_nonneg_int("MEMLORA_DELAY_CPU_TO_DISK_MS", DEFAULT_DELAY_CPU_TO_DISK_MS),
+    ("disk", "cpu"): _env_nonneg_int("MEMLORA_DELAY_DISK_TO_CPU_MS", DEFAULT_DELAY_DISK_TO_CPU_MS),
+    ("gpu", "disk"): _env_nonneg_int("MEMLORA_DELAY_GPU_TO_DISK_MS", DEFAULT_DELAY_GPU_TO_DISK_MS),
+}
 
 
 def load_peer_config():

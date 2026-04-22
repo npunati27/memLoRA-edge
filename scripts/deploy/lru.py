@@ -1,4 +1,4 @@
-from .config import MAX_GPU_LORA, MAX_CPU_LORA
+from .config import MAX_GPU_LORA, MAX_CPU_LORA, TIER_TRANSITION_DELAY_MS
 
 
 class LRUMixin:
@@ -49,6 +49,24 @@ class LRUMixin:
         changes.append((adapter_name, old_tier, "gpu"))
 
         return changes
+
+    def _transition_delay_ms(self, old_tier: str, new_tier: str) -> int:
+        return TIER_TRANSITION_DELAY_MS.get((old_tier, new_tier), 0)
+
+    def _sum_transition_delay(self, changes):
+        """
+        Sum emulated delay for a list of (adapter, old_tier, new_tier) transitions.
+        Returns (total_ms, details) where details are tuples:
+        (adapter, old_tier, new_tier, delay_ms).
+        """
+        total_ms = 0
+        details = []
+        for adapter, old_tier, new_tier in changes:
+            delay_ms = self._transition_delay_ms(old_tier, new_tier)
+            if delay_ms > 0:
+                total_ms += delay_ms
+                details.append((adapter, old_tier, new_tier, delay_ms))
+        return total_ms, details
 
     def _get_local_tier(self, adapter_name: str) -> str:
         """Return current memory tier for an adapter on this node."""

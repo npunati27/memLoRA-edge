@@ -17,6 +17,15 @@ from __future__ import annotations
 
 import json
 import os
+from .defaults import (
+    DEFAULT_MOCK_INFERENCE_DELAY_MS,
+    DEFAULT_MOCK_INFERENCE_JITTER_MS,
+    DEFAULT_MOCK_RESPONSE_TEXT,
+    DEFAULT_MOCK_MODEL_ID,
+    DEFAULT_MOCK_LORA_CSV,
+    DEFAULT_MOCK_SKIP_ADAPTER_CHECK,
+    DEFAULT_MOCK_LOG_EXTRA_JSON,
+)
 
 
 def _env_str(name: str, default: str) -> str:
@@ -35,23 +44,22 @@ def _env_int(name: str, default: int) -> int:
 
 
 # Simulated inference time (wall clock, async sleep)
-MOCK_INFERENCE_DELAY_MS = _env_int("MEMLORA_MOCK_DELAY_MS", 120)
+MOCK_INFERENCE_DELAY_MS = _env_int("MEMLORA_MOCK_DELAY_MS", DEFAULT_MOCK_INFERENCE_DELAY_MS)
 
 # Optional extra jitter in ms (uniform 0..N); set 0 to disable
-MOCK_INFERENCE_JITTER_MS = _env_int("MEMLORA_MOCK_JITTER_MS", 40)
+MOCK_INFERENCE_JITTER_MS = _env_int("MEMLORA_MOCK_JITTER_MS", DEFAULT_MOCK_INFERENCE_JITTER_MS)
 
 # OpenAI-style assistant message content (string). For JSON-looking text, use quotes in shell.
 MOCK_RESPONSE_TEXT = _env_str(
     "MEMLORA_MOCK_RESPONSE",
-    "Simulated memLoRA-edge completion (CPU mock). "
-    "Tune MEMLORA_MOCK_DELAY_MS / MEMLORA_MOCK_RESPONSE in the environment.",
+    DEFAULT_MOCK_RESPONSE_TEXT,
 )
 
 # Base model id used in /v1/models and in model field parsing (must match client requests)
-MOCK_MODEL_ID = _env_str("MEMLORA_MOCK_MODEL_ID", "qwen-base")
+MOCK_MODEL_ID = _env_str("MEMLORA_MOCK_MODEL_ID", DEFAULT_MOCK_MODEL_ID)
 
 # Comma-separated adapter names advertised when ~/adapters is empty or unset
-_DEFAULT_LORA_CSV = "crop_alfalfa_health,pest_aphid,dairy_milk_quality"
+_DEFAULT_LORA_CSV = DEFAULT_MOCK_LORA_CSV
 
 
 def mock_lora_names_from_env() -> list[str]:
@@ -60,14 +68,15 @@ def mock_lora_names_from_env() -> list[str]:
 
 
 # If "1", skip on-disk adapter directory checks (recommended for VMs without adapter files)
-MOCK_SKIP_ADAPTER_PATH_CHECK = _env_str("MEMLORA_MOCK_SKIP_ADAPTER_CHECK", "1").lower() in (
+_default_skip_adapter_check = "1" if DEFAULT_MOCK_SKIP_ADAPTER_CHECK else "0"
+MOCK_SKIP_ADAPTER_PATH_CHECK = _env_str("MEMLORA_MOCK_SKIP_ADAPTER_CHECK", _default_skip_adapter_check).lower() in (
     "1",
     "true",
     "yes",
 )
 
 # JSON log fields for mock inference (optional structured echo)
-MOCK_LOG_EXTRA_JSON = _env_str("MEMLORA_MOCK_LOG_EXTRA_JSON", "")
+MOCK_LOG_EXTRA_JSON = _env_str("MEMLORA_MOCK_LOG_EXTRA_JSON", DEFAULT_MOCK_LOG_EXTRA_JSON)
 
 
 def mock_log_extra() -> dict | None:
