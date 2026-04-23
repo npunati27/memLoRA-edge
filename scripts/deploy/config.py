@@ -7,7 +7,7 @@ LOG_DIR = os.path.join(HOME, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
 ROUTING_MODE = os.getenv("ROUTING_MODE", "baseline").strip().lower()
-TIER_RANK = {"gpu": 0, "cpu": 1, "disk": 2}
+TIER_RANK = {"gpu": 0, "cpu": 1, "disk": 2, "s3": 3}
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,6 +32,8 @@ S3_PREFIX_ROOT = os.getenv("S3_PREFIX_ROOT", "adapters")
 USE_S3_ADAPTERS = os.getenv("USE_S3_ADAPTERS", "true").strip().lower() not in {
     "0",
     "false",
+    "no",
+    "off",
 }
 EXPECTED_ADAPTER_FILES = {
     "adapter_config.json",
