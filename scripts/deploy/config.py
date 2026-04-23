@@ -36,6 +36,15 @@ MAX_GPU_LORA = 3
 MAX_CPU_LORA = 6
 SERVE_PORT = 5000
 
+RTT_MAX_MS = 50
+MAX_QUEUE_LEN = 8
+MEMORY_COST = {
+    "gpu":  0.0,
+    "cpu":  0.015,
+    "disk": 1.0,
+    "s3":   float("inf"),
+}
+
 
 def _env_nonneg_int(name: str, default: int = 0) -> int:
     raw = os.getenv(name, str(default)).strip()

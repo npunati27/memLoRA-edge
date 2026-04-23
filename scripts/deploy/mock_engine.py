@@ -187,7 +187,7 @@ class MockInferenceMixin:
 
 
 class MockMemLoRAEngine(
-    LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, MockInferenceMixin
+    LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, MockInferenceMixin, ProbeMixin
 ):
     """Same cluster behavior as MemLoRAEngine, without loading vLLM or GPU."""
 
@@ -220,6 +220,14 @@ class MockMemLoRAEngine(
 
         self._local_gpu_lru: OrderedDict[str, None] = OrderedDict()
         self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
+
+        # add to MockMemLoRAEngine.__init__:
+        self._measured_rtt: dict[str, float] = {
+            ip: 50.0 for ip in self.peer_ips if ip != self.my_ip
+        }
+        self._probe_failures: dict[str, int] = {
+            ip: 0 for ip in self.peer_ips if ip != self.my_ip
+        }
 
         logger.info(f"[mock] Node: {self.my_ip}")
         logger.info(f"[mock] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
