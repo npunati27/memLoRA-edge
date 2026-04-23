@@ -25,9 +25,10 @@ from .routing import RoutingMixin
 from .gossip import GossipMixin
 from .parsing import ParsingMixin
 from .inference import InferenceMixin
+from .probe import ProbeMixin
 
 
-class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, InferenceMixin):
+class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, InferenceMixin, ProbeMixin):
     def __init__(self):
         from vllm.engine.arg_utils import AsyncEngineArgs
         from vllm.engine.async_llm_engine import AsyncLLMEngine
@@ -59,6 +60,15 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
 
         self._local_gpu_lru: OrderedDict[str, None] = OrderedDict()
         self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
+
+        self._measured_rtt: dict[str, float] = {
+            ip: 50.0  
+            for ip in self.peer_ips if ip != self.my_ip
+        }
+        self._probe_failures: dict[str, int] = {
+            ip: 0
+            for ip in self.peer_ips if ip != self.my_ip
+        }
 
         logger.info(f"[vllm] Node: {self.my_ip}")
         logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
@@ -110,8 +120,10 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
     async def lifespan(app: FastAPI):
         app.state.engine = engine_class()
         app.state.engine._start_gossip_loop()
+        app.state.engine._start_probe_loop()
         yield
         await app.state.engine._stop_gossip_loop()
+        await app.state.engine._stop_probe_loop()
 
     app = FastAPI(lifespan=lifespan)
     app.add_middleware(
@@ -255,6 +267,10 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
                 e._gossip_task is not None and not e._gossip_task.done()
             ),
         })
+    
+    @app.get("/internal/ping")
+    async def ping():
+        return JSONResponse({"ok": True})
 
     @app.get("/internal/logs")
     async def get_logs(request: Request, lines: int = 80):
