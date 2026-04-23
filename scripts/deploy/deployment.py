@@ -2,6 +2,7 @@ import os
 import time
 import asyncio
 import traceback
+import shutil
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 
@@ -249,6 +250,51 @@ async def debug_state():
             engine_node._gossip_task is not None and not engine_node._gossip_task.done()
         ),
     })
+
+
+@app.post("/internal/debug/reset_cache")
+async def reset_cache(request: Request):
+    import aiohttp
+    data = await request.json()
+    adapters = data.get("adapters", [])
+    fanout = data.get("fanout", False)
+    
+    reset_results = {}
+    for adapter in adapters:
+        if adapter in engine_node._peer_adapter_state:
+            # Clear from all tiers
+            for tier in ["gpu", "cpu", "disk"]:
+                engine_node._peer_adapter_state[adapter][tier].clear()
+            # S3 remains empty
+        # Clear local caches
+        engine_node._local_gpu_lru.pop(adapter, None)
+        engine_node._local_cpu_lru.pop(adapter, None)
+        adapter_path = engine_node._get_local_adapter_path(adapter)
+        if os.path.isdir(adapter_path):
+            shutil.rmtree(adapter_path)
+            reset_results[adapter] = "cleared"
+        else:
+            reset_results[adapter] = "not_present"
+    
+    if fanout:
+        # Send to peers
+        async def reset_peer(peer_ip):
+            try:
+                session = await engine_node._ensure_session()
+                async with session.post(
+                    f"http://{peer_ip}:{SERVE_PORT}/internal/debug/reset_cache",
+                    json={"adapters": adapters, "fanout": False},
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    return await resp.json()
+            except Exception as e:
+                return {"error": str(e)}
+        
+        tasks = [reset_peer(ip) for ip in engine_node.peer_ips if ip != engine_node.my_ip]
+        peer_results = await asyncio.gather(*tasks, return_exceptions=True)
+        reset_results["peers"] = peer_results
+    
+    return JSONResponse({"node": engine_node.my_ip, "reset_results": reset_results})
 
 
 @app.get("/internal/logs")
