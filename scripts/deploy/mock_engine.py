@@ -17,6 +17,7 @@ from .routing import RoutingMixin
 from .gossip import GossipMixin
 from .parsing import ParsingMixin
 from . import mock_settings as ms
+from .mock_tier_latency import compute_mock_tier_delays
 
 
 class MockInferenceMixin:
@@ -48,6 +49,7 @@ class MockInferenceMixin:
                 )
 
         tier_before = None
+        changes: list[tuple[str, str, str]] = []
         if adapter_name is not None:
             tier_before = self._get_local_tier(adapter_name)
             changes = self._track_local_adapter(adapter_name)
@@ -64,30 +66,28 @@ class MockInferenceMixin:
         inf_start = time.perf_counter()
         tokens_generated = 0
         try:
-            if adapter_name is not None and changes:
-                transition_delay_ms, transition_details = self._sum_transition_delay(changes)
-                if transition_delay_ms > 0:
+            tier_delay_ms = 0
+            tier_details: list[dict] = []
+            if adapter_name is not None:
+                tier_delay_ms, tier_details = compute_mock_tier_delays(
+                    adapter_name,
+                    changes,
+                    self._mock_s3_fetched,
+                )
+                if tier_delay_ms > 0:
                     logger.info(
                         f"[mock-emulation] request_id={request_id} "
-                        f"tier_delay_ms={transition_delay_ms} details={transition_details}"
+                        f"tier_delay_ms={tier_delay_ms} details={tier_details}"
                     )
                     self.metrics.log(
                         "tier_transition_latency",
                         request_id=request_id,
                         adapter=adapter_name,
-                        total_delay_ms=transition_delay_ms,
-                        details=[
-                            {
-                                "adapter": a,
-                                "old_tier": o,
-                                "new_tier": n,
-                                "delay_ms": d,
-                            }
-                            for a, o, n, d in transition_details
-                        ],
+                        total_delay_ms=tier_delay_ms,
+                        details=tier_details,
                         mock=True,
                     )
-                    await asyncio.sleep(transition_delay_ms / 1000.0)
+                    await asyncio.sleep(tier_delay_ms / 1000.0)
 
             delay_ms = ms.MOCK_INFERENCE_DELAY_MS
             if ms.MOCK_INFERENCE_JITTER_MS > 0:
@@ -114,6 +114,8 @@ class MockInferenceMixin:
                 "adapter_name": adapter_name,
                 "tier_before": tier_before,
                 "mock": True,
+                "mock_tier_delay_ms": tier_delay_ms,
+                "mock_tier_details": tier_details,
                 "mock_delay_ms": delay_ms,
             })
         except Exception as e:
@@ -220,6 +222,8 @@ class MockMemLoRAEngine(
 
         self._local_gpu_lru: OrderedDict[str, None] = OrderedDict()
         self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
+        # Adapters that have completed a simulated S3 fetch on this node (first disk->GPU).
+        self._mock_s3_fetched: set[str] = set()
 
         # add to MockMemLoRAEngine.__init__:
         self._measured_rtt: dict[str, float] = {
@@ -233,7 +237,8 @@ class MockMemLoRAEngine(
         logger.info(f"[mock] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
         logger.info(
             f"[mock] Adapters ({len(self.lora_names)}): {self.lora_names} "
-            f"(delay_ms≈{ms.MOCK_INFERENCE_DELAY_MS}+{ms.MOCK_INFERENCE_JITTER_MS} jitter)"
+            f"(inference_delay≈{ms.MOCK_INFERENCE_DELAY_MS}+{ms.MOCK_INFERENCE_JITTER_MS} jitter; "
+            "tier/S3 bands in scripts/deploy/defaults.py)"
         )
 
     async def _stop_gossip_loop(self):

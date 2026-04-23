@@ -126,26 +126,25 @@ Persistent config file option: edit `scripts/deploy/defaults.py` to set project 
 for mock latency/response and tier-transition emulation without exporting env vars each run.
 Environment variables still take precedence when set.
 
-### Tier Transition Latency Emulation (mock only)
+### Mock tier + S3 latency (mock only, `MEMLORA_MOCK=1`)
 
-You can inject per-transition adapter movement latency (milliseconds) during local LRU tier changes:
+Inference charges **random delays in ms** from configurable bands (defaults in `scripts/deploy/defaults.py`):
 
-- `MEMLORA_DELAY_DISK_TO_GPU_MS`
-- `MEMLORA_DELAY_CPU_TO_GPU_MS`
-- `MEMLORA_DELAY_GPU_TO_CPU_MS`
-- `MEMLORA_DELAY_CPU_TO_DISK_MS`
-- `MEMLORA_DELAY_DISK_TO_CPU_MS`
-- `MEMLORA_DELAY_GPU_TO_DISK_MS`
+| Band | Default range | Meaning |
+|------|----------------|--------|
+| GPU | 1–10 | Adapter already on GPU (LRU hit, no tier moves) |
+| CPU | 10–100 | `cpu→gpu` load; `gpu→cpu` eviction landing in CPU |
+| Disk | 50–300 | `cpu→disk` spill; **subsequent** `disk→gpu` (local cache re-warm) |
+| S3 | 200–5000 | **First** `disk→gpu` for that adapter **on this node** (simulated remote fetch) |
 
-Example:
+Override with env (min/max pairs):
 
-```bash
-export MEMLORA_DELAY_DISK_TO_GPU_MS=120
-export MEMLORA_DELAY_CPU_TO_DISK_MS=40
-```
+- `MEMLORA_MOCK_LATENCY_GPU_MIN_MS` / `MEMLORA_MOCK_LATENCY_GPU_MAX_MS`
+- `MEMLORA_MOCK_LATENCY_CPU_MIN_MS` / `MEMLORA_MOCK_LATENCY_CPU_MAX_MS`
+- `MEMLORA_MOCK_LATENCY_DISK_MIN_MS` / `MEMLORA_MOCK_LATENCY_DISK_MAX_MS`
+- `MEMLORA_MOCK_LATENCY_S3_MIN_MS` / `MEMLORA_MOCK_LATENCY_S3_MAX_MS`
 
-These delays apply in `MEMLORA_MOCK=1` mode when requests trigger tier transitions and are recorded as
-`tier_transition_latency` events in metrics logs.
+Per-request sleeps are summed for every LRU transition in order, then the optional `MEMLORA_MOCK_DELAY_MS` (+ jitter) runs as extra “compute” time. Metrics: `tier_transition_latency` with a `details` list (`kind` includes `s3_first_load`, `disk_cache_to_gpu`, `cpu_to_gpu`, `gpu_to_cpu`, `cpu_to_disk`, `gpu_resident_hit`).
 
 You still need **`~/peers.json`** (same shape as the GPU setup) so peers can gossip and `/internal/cluster` can fan out.
 
