@@ -58,6 +58,44 @@ The HTTP server listens on **`SERVE_PORT`** (default **5000**). Endpoints includ
 export ROUTING_MODE=baseline   # default, or: memory
 ```
 
+## Dashboard (local browser)
+
+The UI is **`scripts/dashboard.html`**. The bundled JS calls the API at **`http://localhost:5000`** (`const BASE` in that file), so your browser must be able to reach **localhost:5000** (usually via SSH port forwarding to the node running Ray Serve).
+
+### Port forwarding: API (5000) and optional static server (3000)
+
+Use **one** SSH session with **both** forwards when you run `python3 -m http.server 3000` **on the cluster node** and want to open the dashboard from your laptop using **localhost** for everything:
+
+```bash
+# Replace PUBLIC_HOST, user, and 10.0.0.1 (LAN IP of the node serving API + static files)
+ssh -L 5000:10.0.0.1:5000 -L 3000:10.0.0.1:3000 user@PUBLIC_HOST
+```
+
+- **5000** → Serve / FastAPI (`python -m scripts.deploy`, default `SERVE_PORT`).
+- **3000** → `python3 -m http.server 3000` in `scripts/` on that same node.
+
+Then on the **node**:
+
+```bash
+cd ~/memLoRA-edge/scripts   # or your clone path
+python3 -m http.server 3000
+```
+
+On your **laptop** browser: **`http://localhost:3000/dashboard.html`** (HTML from the tunnel) and the page will fetch **`http://localhost:5000/internal/...`** (API through the other tunnel).
+
+### Static files only on your laptop
+
+If you run `python3 -m http.server 3000` **locally** (repo `scripts/` on your machine), you only need the API forward:
+
+```bash
+ssh -L 5000:10.0.0.1:5000 user@PUBLIC_HOST
+cd /path/to/memLoRA-edge/scripts && python3 -m http.server 3000
+```
+
+Open **`http://localhost:3000/dashboard.html`**.
+
+If **3000** or **5000** is already in use locally, change the **first** number in each `-L` (local side), e.g. `-L 5001:10.0.0.1:5000 -L 3001:10.0.0.1:3000`, use the same local port for `http.server`, and edit `dashboard.html` `BASE` if you move the API away from `localhost:5000`.
+
 ## CPU-only mock (no GPU / no vLLM)
 
 Same process and **same routes** as the GPU server; only local inference is faked (sleep + fixed text). Use when you want gossip, routing, and the cluster view without loading a model.
