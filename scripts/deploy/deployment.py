@@ -185,7 +185,7 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
         routing_start = time.perf_counter()
         if ROUTING_MODE == "cost":
             target_ip = e._choose_target_node_cost(adapter_name, parsed["client_ip"])
-        if ROUTING_MODE == "memory":
+        elif ROUTING_MODE == "memory":
             target_ip = e._choose_target_node_memory(adapter_name, parsed["client_ip"])
         else:
             target_ip = e._choose_target_node_baseline(adapter_name, parsed["client_ip"])

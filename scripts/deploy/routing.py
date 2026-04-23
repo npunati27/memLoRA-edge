@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST
+from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST, logger
 
 
 class RoutingMixin:
@@ -152,10 +152,10 @@ class RoutingMixin:
 
         def s3_cost(node_ip):
             if node_ip == self.my_ip:
-                queue_cost = min(self._ongoing / QUEUE_MAX, 1.0)
+                queue_cost = min(self._ongoing / MAX_QUEUE_LEN, 1.0)
                 network_cost = 0.0
             else:
-                queue_cost = min(self._peer_queue_lengths.get(node_ip, 0) / QUEUE_MAX, 1.0)
+                queue_cost = min(self._peer_queue_lengths.get(node_ip, 0) / MAX_QUEUE_LEN, 1.0)
                 rtt = self._measured_rtt.get(node_ip, RTT_MAX_MS)
                 if rtt == float("inf"):
                     return float("inf")
