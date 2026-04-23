@@ -4,7 +4,10 @@ CPU-only mock server defaults. Used when ``MEMLORA_MOCK=1`` (see ``config.USE_MO
 Run the same entrypoint as production: ``MEMLORA_MOCK=1 python -m scripts.deploy``.
 Optional shorthand: ``python -m scripts.deploy.mock_main`` (sets the flag for you).
 
-Override with environment variables (no code edits):
+Override with environment variables (no code edits).
+
+Tier/S3 bands (mock): see ``scripts/deploy/mock_tier_latency.py`` and
+``MEMLORA_MOCK_LATENCY_*_MIN_MS`` / ``MAX_MS`` env vars; defaults in ``defaults.py``.
 
 Examples:
   MEMLORA_MOCK_DELAY_MS=250
