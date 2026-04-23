@@ -55,7 +55,7 @@ echo "    Peers: $MY_PEERS"
 echo "    Repo:  $REPO_PATH"
 echo ""
 
-bash "$REPO_PATH/scripts/mock_setup.sh" \
+bash "$REPO_PATH/scripts/setup-mock-vm.sh" \
     --no-sudo \
     --peers "$MY_PEERS" \
     "$NODE_IDX" \
