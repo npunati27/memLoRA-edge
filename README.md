@@ -188,6 +188,23 @@ Do this on **each** CPU VM. Use the **same ordered peer list** (private IPs or r
 
    This installs Python 3 + pip + git (via **apt** or **dnf/yum**), creates **`~/venv`**, installs **FastAPI / uvicorn / aiohttp** only (no PyTorch or vLLM), creates **`~/logs`** and **`~/adapters`**, and writes **`~/peers.json`**.
 
+   #### Partial-mesh topology (optional)
+
+   By default every node peers with all other nodes (full mesh). Use `--peers` to connect a node to only a subset — useful for ring, tree, or hub-and-spoke topologies:
+
+   ```bash
+   # Syntax: --peers takes a comma-separated list of IPs this node should connect to.
+   bash scripts/setup-mock-vm.sh --peers <PEER_IP>,<PEER_IP>,... <NODE_IDX> <IP0> <IP1> ...
+   ```
+
+   Example — node `1` in a ring (connects to node `0` and node `2` only, not node `3`):
+
+   ```bash
+   bash scripts/setup-mock-vm.sh --peers 10.0.0.1,10.0.0.3 1 10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4
+   ```
+
+   The full IP list is still required as positional args so `NODE_IDX` resolves to `my_ip` correctly; only the `peers` array written to `~/peers.json` changes. Each node’s `--peers` list is independent, so asymmetric topologies (directed edges) are possible by running the script with different `--peers` on each VM.
+
 5. **Open the API port** if a firewall is on (default **5000/tcp**):
 
    ```bash

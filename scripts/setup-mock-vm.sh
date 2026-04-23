@@ -4,9 +4,12 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 NODE_IDX IP0 [IP1 ...]" >&2
+    echo "Usage: $0 [--peers IP,IP,...] NODE_IDX IP0 [IP1 ...]" >&2
     echo "  Writes ~/peers.json and installs a venv with API-only Python deps." >&2
-    echo "Example (this machine is the second node): $0 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
+    echo "  --peers  Comma-separated subset of IPs this node connects to (partial mesh)." >&2
+    echo "           Omit for full mesh (all other nodes)." >&2
+    echo "Example (full mesh, this machine is node 1): $0 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
+    echo "Example (partial mesh, node 1 only sees node 0): $0 --peers 10.0.0.1 1 10.0.0.1 10.0.0.2 10.0.0.3" >&2
     exit 1
 }
 
@@ -15,10 +18,15 @@ case "${MEMLORA_USE_SUDO:-yes}" in 0|no|false|off) SHOULD_SUDO=false ;;
     1|yes|true|on)  SHOULD_SUDO=true ;;
 esac
 
+PARTIAL_PEERS=()
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --no-sudo) SHOULD_SUDO=false; shift ;;
         --sudo)    SHOULD_SUDO=true; shift ;;
+        --peers)
+            [[ $# -lt 2 ]] && { echo "Error: --peers requires an argument" >&2; usage; }
+            IFS=',' read -ra PARTIAL_PEERS <<< "$2"; shift 2 ;;
         -h|--help) usage ;;
         *) break ;;
     esac
@@ -42,7 +50,21 @@ fi
 
 MY_IP="${NODE_IPS[$NODE_IDX]}"
 
-echo "==> Mock VM setup: node $NODE_IDX / $NUM_NODES (my_ip=$MY_IP)"
+# Build the effective peer list: --peers override or full mesh (all nodes except self).
+EFFECTIVE_PEERS=()
+if [[ ${#PARTIAL_PEERS[@]} -gt 0 ]]; then
+    for ip in "${PARTIAL_PEERS[@]}"; do
+        [[ "$ip" == "$MY_IP" ]] && continue  # never include self
+        EFFECTIVE_PEERS+=("$ip")
+    done
+else
+    for ip in "${NODE_IPS[@]}"; do
+        [[ "$ip" == "$MY_IP" ]] && continue
+        EFFECTIVE_PEERS+=("$ip")
+    done
+fi
+
+echo "==> Mock VM setup: node $NODE_IDX / $NUM_NODES (my_ip=$MY_IP, peers=${EFFECTIVE_PEERS[*]:-none})"
 
 install_base_packages() {
     if [[ ! -f /etc/os-release ]]; then
@@ -96,8 +118,12 @@ pip install -q \
 
 mkdir -p ~/logs ~/adapters
 
-PEERS_JSON=$(printf '"%s",' "${NODE_IPS[@]}")
-PEERS_JSON="[${PEERS_JSON%,}]"
+if [[ ${#EFFECTIVE_PEERS[@]} -gt 0 ]]; then
+    PEERS_JSON=$(printf '"%s",' "${EFFECTIVE_PEERS[@]}")
+    PEERS_JSON="[${PEERS_JSON%,}]"
+else
+    PEERS_JSON="[]"
+fi
 
 cat > ~/peers.json << PEERS
 {
