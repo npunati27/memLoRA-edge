@@ -190,22 +190,25 @@ if [[ "$ENABLE_TC" == true ]]; then
     _link_latency() {
         local i=$1 j=$2
         local d=$(( i > j ? i - j : j - i ))
-        local ms=$(( 10 + d * 30 + (i + j) * 5 ))
-        (( ms > 120 )) && ms=120
+        # one-way delay = RTT/2, so 0.5ms-25ms one-way gives 1-50ms RTT
+        local ms=$(( 1 + d * 6 + (i + j) * 2 ))
+        (( ms > 25 )) && ms=25
         echo "${ms}ms"
     }
 
     _link_bw() {
         local i=$1 j=$2
         local d=$(( i > j ? i - j : j - i ))
-        local mb=$(( 100 - d * 25 ))
-        (( mb < 10 )) && mb=10
+        # farm WiFi: 20-100 Mbps depending on distance/signal
+        local mb=$(( 100 - d * 20 ))
+        (( mb < 20 )) && mb=20
         echo "${mb}mbit"
     }
 
     _link_loss() {
         local i=$1 j=$2
-        local p=$(( (i * 3 + j * 5 + i * j) % 9 ))
+        # farm WiFi: 0-2% loss, higher for distant nodes
+        local p=$(( (i * j) % 3 ))
         echo "${p}%"
     }
 
