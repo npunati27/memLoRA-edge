@@ -15,6 +15,7 @@ from .metrics import MetricsLogger
 from .lru import LRUMixin
 from .routing import RoutingMixin
 from .gossip import GossipMixin
+from .probe import ProbeMixin
 from .parsing import ParsingMixin
 from . import mock_settings as ms
 from .mock_tier_latency import compute_mock_tier_delays
