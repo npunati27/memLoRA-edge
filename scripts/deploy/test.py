@@ -114,6 +114,13 @@ def summarize_cluster_snapshot(snapshot: dict, adapters: list[str], after_reques
 
         node_tier_counts[node_ip] = tier_detail
 
+    tier_counts["s3"] = max(
+        0,
+        len(tracked)
+        - tier_counts["gpu"]
+        - tier_counts["cpu"]
+        - tier_counts["disk"],
+    )
     return {
         "after_request_index": after_request_index,
         "ts_unix": snapshot.get("ts", time.time()),

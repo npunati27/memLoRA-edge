@@ -12,7 +12,7 @@ from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from .config import (
-    LOG_DIR, MODEL_PATH,
+    LOG_DIR, MODEL_PATH, ADAPTER_PATH,
     MAX_GPU_LORA, MAX_CPU_LORA, SERVE_PORT,
     ROUTING_MODE, logger,
     load_peer_config, get_lora_names,
@@ -79,6 +79,14 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
 
         self.engine = AsyncLLMEngine.from_engine_args(engine_args)
         logger.info("[vllm] Engine ready.")
+
+    def _get_local_disk_adapters(self) -> list[str]:
+        return [
+            name for name in self.lora_names
+            if name not in self._local_gpu_lru
+            and name not in self._local_cpu_lru
+            and os.path.isdir(os.path.join(ADAPTER_PATH, name))
+        ]
 
     async def _stop_gossip_loop(self):
         if self._gossip_task and not self._gossip_task.done():
@@ -240,6 +248,7 @@ async def debug_state():
         "local_adapters": {
             "gpu": list(engine_node._local_gpu_lru.keys()),
             "cpu": list(engine_node._local_cpu_lru.keys()),
+            "disk": engine_node._get_local_disk_adapters(),
         },
         "adapter_state": {
             adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
@@ -269,7 +278,7 @@ async def reset_cache(request: Request):
         # Clear local caches
         engine_node._local_gpu_lru.pop(adapter, None)
         engine_node._local_cpu_lru.pop(adapter, None)
-        adapter_path = engine_node._get_local_adapter_path(adapter)
+        adapter_path = os.path.join(ADAPTER_PATH, adapter)
         if os.path.isdir(adapter_path):
             shutil.rmtree(adapter_path)
             reset_results[adapter] = "cleared"
@@ -332,6 +341,7 @@ async def cluster_state():
         "local_adapters": {
             "gpu": list(engine_node._local_gpu_lru.keys()),
             "cpu": list(engine_node._local_cpu_lru.keys()),
+            "disk": engine_node._get_local_disk_adapters(),
         },
         "adapter_state": {
             a: {t: list(n) for t, n in tiers.items()}
