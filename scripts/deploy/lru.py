@@ -1,5 +1,4 @@
 import os
-import shutil
 
 from .config import ADAPTER_PATH, MAX_GPU_LORA, MAX_CPU_LORA, USE_S3_ADAPTERS
 
