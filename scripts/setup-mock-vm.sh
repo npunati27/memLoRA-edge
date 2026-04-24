@@ -98,7 +98,11 @@ install_base_packages() {
     fi
 }
 
-install_base_packages
+if [[ ${#SUDO[@]} -gt 0 ]]; then
+    install_base_packages
+else
+    echo "==> Skipping package install (--no-sudo) — assuming python3, pip, git already installed"
+fi
 
 if [[ ! -d ~/venv ]]; then
     python3 -m venv ~/venv
