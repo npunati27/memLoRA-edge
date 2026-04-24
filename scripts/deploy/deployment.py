@@ -4,6 +4,7 @@ import os
 import time
 import asyncio
 import traceback
+import shutil
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from typing import Any, Callable
@@ -14,7 +15,7 @@ from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from .config import (
-    LOG_DIR, MODEL_PATH,
+    LOG_DIR, MODEL_PATH, ADAPTER_PATH,
     MAX_GPU_LORA, MAX_CPU_LORA, SERVE_PORT,
     ROUTING_MODE, USE_MOCK_ENGINE, logger,
     load_peer_config, get_lora_names,
@@ -91,6 +92,14 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
 
         self.engine = AsyncLLMEngine.from_engine_args(engine_args)
         logger.info("[vllm] Engine ready.")
+
+    def _get_local_disk_adapters(self) -> list[str]:
+        return [
+            name for name in self.lora_names
+            if name not in self._local_gpu_lru
+            and name not in self._local_cpu_lru
+            and os.path.isdir(os.path.join(ADAPTER_PATH, name))
+        ]
 
     async def _stop_gossip_loop(self):
         if self._gossip_task and not self._gossip_task.done():
@@ -259,6 +268,7 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
             "local_adapters": {
                 "gpu": list(e._local_gpu_lru.keys()),
                 "cpu": list(e._local_cpu_lru.keys()),
+                "disk": e._get_local_disk_adapters(),
             },
             "adapter_state": {
                 adapter: {tier: list(nodes) for tier, nodes in tiers.items()}
@@ -270,6 +280,48 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
             ),
         })
     
+    @app.post("/internal/debug/reset_cache")
+    async def reset_cache(request: Request):
+        import aiohttp
+
+        e = request.app.state.engine
+        data = await request.json()
+        adapters = data.get("adapters", [])
+        fanout = data.get("fanout", False)
+
+        reset_results = {}
+        for adapter in adapters:
+            if adapter in e._peer_adapter_state:
+                for tier in ["gpu", "cpu", "disk"]:
+                    e._peer_adapter_state[adapter][tier].clear()
+            e._local_gpu_lru.pop(adapter, None)
+            e._local_cpu_lru.pop(adapter, None)
+            adapter_path = os.path.join(ADAPTER_PATH, adapter)
+            if os.path.isdir(adapter_path):
+                shutil.rmtree(adapter_path)
+                reset_results[adapter] = "cleared"
+            else:
+                reset_results[adapter] = "not_present"
+
+        if fanout:
+            async def reset_peer(peer_ip: str):
+                try:
+                    session = await e._ensure_session()
+                    async with session.post(
+                        f"http://{peer_ip}:{SERVE_PORT}/internal/debug/reset_cache",
+                        json={"adapters": adapters, "fanout": False},
+                        timeout=aiohttp.ClientTimeout(total=5),
+                    ) as resp:
+                        return await resp.json()
+                except Exception as err:
+                    return {"error": str(err)}
+
+            tasks = [reset_peer(ip) for ip in e.peer_ips if ip != e.my_ip]
+            peer_results = await asyncio.gather(*tasks, return_exceptions=True)
+            reset_results["peers"] = peer_results
+
+        return JSONResponse({"node": e.my_ip, "reset_results": reset_results})
+
     @app.get("/internal/ping")
     async def ping():
         return JSONResponse({"ok": True})
@@ -310,6 +362,7 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
             "local_adapters": {
                 "gpu": list(e._local_gpu_lru.keys()),
                 "cpu": list(e._local_cpu_lru.keys()),
+                "disk": e._get_local_disk_adapters(),
             },
             "adapter_state": {
                 a: {t: list(n) for t, n in tiers.items()}

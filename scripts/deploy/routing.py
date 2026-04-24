@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST, logger
+from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST, logger, USE_S3_ADAPTERS
 
 
 class RoutingMixin:
@@ -18,6 +18,12 @@ class RoutingMixin:
             return "gpu"
         if node_ip in peer_tiers.get("cpu", set()):
             return "cpu"
+        if node_ip in peer_tiers.get("disk", set()):
+            return "disk"
+        if node_ip in peer_tiers.get("s3", set()):
+            return "s3"
+        if USE_S3_ADAPTERS:
+            return "s3"
         return "disk"
 
     def _get_known_queue_lengths(self) -> dict[str, int]:
