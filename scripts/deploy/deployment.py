@@ -290,10 +290,10 @@ async def reset_cache(request: Request):
     reset_results = {}
     for adapter in adapters:
         if adapter in engine_node._peer_adapter_state:
-            # Clear from all tiers
-            for tier in ["gpu", "cpu", "disk", "s3"]:
-                engine_node._peer_adapter_state[adapter][tier].clear()
-            # S3 remains empty
+            # Clear all currently known tiers defensively. Some adapters may not
+            # have every tier key initialized yet (for example, "s3").
+            for tier_nodes in engine_node._peer_adapter_state[adapter].values():
+                tier_nodes.clear()
         # Clear local caches
         engine_node._local_gpu_lru.pop(adapter, None)
         engine_node._local_cpu_lru.pop(adapter, None)
