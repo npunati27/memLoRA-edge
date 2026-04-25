@@ -1,0 +1,273 @@
+
+[uniform] 2.0 rps for 120s — equal probability across all 25 adapters
+  OK  pest_beneficial_count             252ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            234ms  served_by=10.10.1.2
+  OK  irrigation_water_quality          191ms  served_by=10.10.1.4
+  OK  pest_thrips                       192ms  served_by=10.10.1.2
+  OK  crop_stress_drought               191ms  served_by=10.10.1.2
+  OK  pest_slug                         191ms  served_by=10.10.1.4
+  OK  nutrient_runoff_risk              254ms  served_by=10.10.1.3
+  OK  soil_erosion_risk                 191ms  served_by=10.10.1.4
+  OK  crop_tomato_disease               232ms  served_by=10.10.1.1
+  OK  crop_stress_heat                  202ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                237ms  served_by=10.10.1.3
+  OK  weather_frost_alert               244ms  served_by=10.10.1.4
+  OK  equip_planter                     196ms  served_by=10.10.1.3
+  OK  equip_planter                     243ms  served_by=10.10.1.1
+  OK  crop_harvest_window               191ms  served_by=10.10.1.1
+  OK  equip_drone                       237ms  served_by=10.10.1.2
+  OK  crop_harvest_window               192ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 191ms  served_by=10.10.1.1
+  OK  livestock_pasture_rotation        192ms  served_by=10.10.1.2
+  OK  crop_sunflower_disease            192ms  served_by=10.10.1.2
+  OK  crop_pasture_health               191ms  served_by=10.10.1.1
+  OK  irrigation_zone_d                 192ms  served_by=10.10.1.2
+  OK  pest_thrips                       194ms  served_by=10.10.1.2
+  OK  crop_potato_disease               235ms  served_by=10.10.1.3
+  OK  soil_compaction                   192ms  served_by=10.10.1.3
+  OK  weather_dew_point                 252ms  served_by=10.10.1.1
+  OK  equip_yield_monitor               195ms  served_by=10.10.1.2
+  OK  crop_yield_pred_south             192ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 233ms  served_by=10.10.1.4
+  OK  soil_moisture                     192ms  served_by=10.10.1.1
+  OK  equip_sensor                      254ms  served_by=10.10.1.3
+  OK  crop_cotton_disease               242ms  served_by=10.10.1.2
+  OK  weather_heat_index                193ms  served_by=10.10.1.2
+  OK  crop_sunflower_disease            253ms  served_by=10.10.1.4
+  OK  crop_berry_disease                192ms  served_by=10.10.1.4
+  OK  weather_evapotranspiration        239ms  served_by=10.10.1.3
+  OK  soil_potassium                    232ms  served_by=10.10.1.1
+  OK  pest_slug                         191ms  served_by=10.10.1.1
+  OK  irrigation_flow_meter             232ms  served_by=10.10.1.4
+  OK  irrigation_flow_meter             181ms  served_by=10.10.1.4
+  OK  weather_humidity                  253ms  served_by=10.10.1.3
+  OK  irrigation_water_quality          214ms  served_by=10.10.1.1
+  OK  crop_cotton_disease               221ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 194ms  served_by=10.10.1.3
+  OK  equip_gps_guidance                192ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 192ms  served_by=10.10.1.3
+  OK  weather_precipitation             235ms  served_by=10.10.1.4
+  OK  pest_thrips                       243ms  served_by=10.10.1.2
+  OK  crop_corn_disease                 192ms  served_by=10.10.1.2
+  OK  equip_baler                       244ms  served_by=10.10.1.3
+  OK  pest_general                      238ms  served_by=10.10.1.1
+  OK  crop_berry_disease                193ms  served_by=10.10.1.3
+  OK  dairy_milk_quality                231ms  served_by=10.10.1.2
+  OK  crop_stress_drought               254ms  served_by=10.10.1.4
+  OK  weather_hail_risk                 186ms  served_by=10.10.1.4
+  OK  pest_general                      244ms  served_by=10.10.1.3
+  OK  grain_storage_temp                196ms  served_by=10.10.1.4
+  OK  equip_yield_monitor               192ms  served_by=10.10.1.3
+  OK  pest_bee_health                   193ms  served_by=10.10.1.3
+  OK  irrigation_leak_detect            193ms  served_by=10.10.1.3
+  OK  soil_temp_root                    229ms  served_by=10.10.1.2
+  OK  crop_pasture_health               250ms  served_by=10.10.1.4
+  OK  pest_thrips                       187ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                192ms  served_by=10.10.1.2
+  OK  soil_carbon_estimate              243ms  served_by=10.10.1.1
+  OK  weather_humidity                  192ms  served_by=10.10.1.4
+  OK  crop_stress_drought               191ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 186ms  served_by=10.10.1.4
+  OK  pest_rootworm                     192ms  served_by=10.10.1.4
+  OK  equip_harvester                   252ms  served_by=10.10.1.2
+  OK  pest_beneficial_count             230ms  served_by=10.10.1.3
+  OK  equip_tractor                     192ms  served_by=10.10.1.2
+  OK  weather_hail_risk                 244ms  served_by=10.10.1.1
+  OK  crop_barley_disease               203ms  served_by=10.10.1.3
+  OK  weather_wind_alert                192ms  served_by=10.10.1.2
+  OK  pest_borer                        191ms  served_by=10.10.1.2
+  OK  irrigation_water_quality          248ms  served_by=10.10.1.4
+  OK  soil_moisture                     192ms  served_by=10.10.1.4
+  OK  nutrient_runoff_risk              192ms  served_by=10.10.1.2
+  OK  irrigation_drip_health            192ms  served_by=10.10.1.4
+  OK  equip_drone                       229ms  served_by=10.10.1.3
+  OK  equip_fuel_telemetry              194ms  served_by=10.10.1.3
+  OK  pest_weevil                       248ms  served_by=10.10.1.1
+  OK  crop_yield_pred_south             252ms  served_by=10.10.1.2
+  OK  pest_beneficial_count             187ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 229ms  served_by=10.10.1.4
+  OK  equip_fuel_telemetry              192ms  served_by=10.10.1.2
+  OK  soil_moisture                     228ms  served_by=10.10.1.1
+  OK  crop_wheat_disease                192ms  served_by=10.10.1.2
+  OK  soil_carbon_estimate              252ms  served_by=10.10.1.3
+  OK  weather_soil_temp                 192ms  served_by=10.10.1.3
+  OK  irrigation_sprinkler_uniform      192ms  served_by=10.10.1.3
+  OK  equip_sprayer                     241ms  served_by=10.10.1.2
+  OK  crop_citrus_disease               228ms  served_by=10.10.1.4
+  OK  crop_grape_disease                191ms  served_by=10.10.1.4
+  OK  irrigation_sched_block1           228ms  served_by=10.10.1.1
+  OK  weather_precipitation             192ms  served_by=10.10.1.4
+  OK  crop_apple_disease                253ms  served_by=10.10.1.3
+  OK  crop_grape_disease                242ms  served_by=10.10.1.2
+  OK  soil_ph                           192ms  served_by=10.10.1.4
+  OK  equip_yield_monitor               193ms  served_by=10.10.1.3
+  OK  equip_harvester                   229ms  served_by=10.10.1.1
+  OK  crop_berry_disease                191ms  served_by=10.10.1.1
+  OK  pest_borer                        237ms  served_by=10.10.1.2
+  OK  pest_whitefly                     193ms  served_by=10.10.1.2
+  OK  equip_spreader                    191ms  served_by=10.10.1.2
+  OK  grain_moisture_bin                238ms  served_by=10.10.1.3
+  OK  soil_potassium                    192ms  served_by=10.10.1.2
+  OK  crop_harvest_window               252ms  served_by=10.10.1.1
+  OK  pest_caterpillar                  193ms  served_by=10.10.1.2
+  OK  pest_snail                        253ms  served_by=10.10.1.4
+  OK  weather_forecast                  191ms  served_by=10.10.1.1
+  OK  irrigation_zone_e                 192ms  served_by=10.10.1.2
+  OK  weather_forecast                  192ms  served_by=10.10.1.2
+  OK  soil_n_source                     241ms  served_by=10.10.1.3
+  OK  crop_canola_disease               191ms  served_by=10.10.1.2
+  OK  equip_sensor                      252ms  served_by=10.10.1.4
+  OK  crop_peach_disease                192ms  served_by=10.10.1.4
+  OK  weather_soil_temp                 191ms  served_by=10.10.1.2
+  OK  pest_snail                        236ms  served_by=10.10.1.1
+  OK  weather_heat_index                192ms  served_by=10.10.1.1
+  OK  soil_nitrogen                     238ms  served_by=10.10.1.4
+  OK  crop_wheat_disease                243ms  served_by=10.10.1.2
+  OK  crop_general_health               192ms  served_by=10.10.1.4
+  OK  grain_storage_temp                193ms  served_by=10.10.1.2
+  OK  crop_canola_disease               244ms  served_by=10.10.1.3
+  OK  dairy_milk_quality                194ms  served_by=10.10.1.4
+  OK  equip_baler                       238ms  served_by=10.10.1.1
+  OK  crop_stress_drought               191ms  served_by=10.10.1.4
+  OK  pest_snail                        180ms  served_by=10.10.1.1
+  OK  irrigation_zone_d                 191ms  served_by=10.10.1.1
+  OK  crop_alfalfa_health               228ms  served_by=10.10.1.2
+  OK  pest_spider_mite                  249ms  served_by=10.10.1.3
+  OK  soil_compaction                   192ms  served_by=10.10.1.2
+  OK  equip_drone                       244ms  served_by=10.10.1.1
+  OK  irrigation_zone_c                 193ms  served_by=10.10.1.3
+  OK  weather_frost_alert               240ms  served_by=10.10.1.4
+  OK  crop_citrus_disease               232ms  served_by=10.10.1.2
+  OK  irrigation_leak_detect            193ms  served_by=10.10.1.3
+  OK  pest_general                      197ms  served_by=10.10.1.4
+  OK  equip_spreader                    241ms  served_by=10.10.1.1
+  OK  crop_peach_disease                194ms  served_by=10.10.1.3
+  OK  pest_weevil                       191ms  served_by=10.10.1.4
+  OK  equip_tractor                     191ms  served_by=10.10.1.4
+  OK  crop_grape_disease                252ms  served_by=10.10.1.2
+  OK  pest_bee_health                   191ms  served_by=10.10.1.4
+  OK  crop_cotton_disease               253ms  served_by=10.10.1.3
+  OK  equip_tractor                     193ms  served_by=10.10.1.3
+  OK  livestock_pasture_rotation        213ms  served_by=10.10.1.2
+  OK  crop_cotton_disease               243ms  served_by=10.10.1.4
+  OK  pest_slug                         231ms  served_by=10.10.1.1
+  OK  pest_general                      185ms  served_by=10.10.1.4
+  OK  soil_n_source                     252ms  served_by=10.10.1.3
+  OK  crop_yield_pred_south             192ms  served_by=10.10.1.3
+  OK  equip_tractor                     186ms  served_by=10.10.1.4
+  OK  weather_wind_alert                196ms  served_by=10.10.1.3
+  OK  crop_growth_stage                 228ms  served_by=10.10.1.1
+  OK  dairy_feed_ration                 193ms  served_by=10.10.1.3
+  OK  pest_weevil                       252ms  served_by=10.10.1.2
+  OK  pest_snail                        192ms  served_by=10.10.1.2
+  OK  pest_caterpillar                  227ms  served_by=10.10.1.1
+  OK  soil_moisture                     192ms  served_by=10.10.1.2
+  OK  livestock_poultry                 192ms  served_by=10.10.1.2
+  OK  equip_baler                       192ms  served_by=10.10.1.2
+  OK  irrigation_water_quality          228ms  served_by=10.10.1.1
+  OK  crop_wheat_disease                191ms  served_by=10.10.1.1
+  OK  equip_sprayer                     253ms  served_by=10.10.1.3
+  OK  soil_moisture                     232ms  served_by=10.10.1.2
+  OK  soil_organic_matter               191ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           253ms  served_by=10.10.1.4
+  OK  irrigation_drip_health            209ms  served_by=10.10.1.3
+  OK  equip_sensor                      192ms  served_by=10.10.1.1
+  OK  equip_fuel_telemetry              241ms  served_by=10.10.1.2
+  OK  crop_stress_drought               193ms  served_by=10.10.1.3
+  OK  crop_alfalfa_health               192ms  served_by=10.10.1.1
+  OK  pest_weevil                       194ms  served_by=10.10.1.3
+  OK  weather_wind_alert                192ms  served_by=10.10.1.2
+  OK  livestock_poultry                 252ms  served_by=10.10.1.4
+  OK  pest_aphid                        195ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  190ms  served_by=10.10.1.4
+  OK  crop_stress_heat                  234ms  served_by=10.10.1.1
+  OK  livestock_poultry                 180ms  served_by=10.10.1.4
+  OK  pest_leafhopper                   231ms  served_by=10.10.1.2
+  OK  crop_yield_pred_north             191ms  served_by=10.10.1.4
+  OK  soil_organic_matter               198ms  served_by=10.10.1.2
+  OK  irrigation_zone_e                 251ms  served_by=10.10.1.1
+  OK  crop_peach_disease                192ms  served_by=10.10.1.2
+  OK  pest_general                      193ms  served_by=10.10.1.2
+  OK  soil_moisture                     238ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   245ms  served_by=10.10.1.3
+  OK  livestock_pasture_rotation        192ms  served_by=10.10.1.4
+  OK  equip_harvester                   192ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            241ms  served_by=10.10.1.1
+  OK  crop_barley_disease               244ms  served_by=10.10.1.3
+  OK  crop_general_health               192ms  served_by=10.10.1.1
+  OK  pest_bee_health                   192ms  served_by=10.10.1.3
+  OK  pest_aphid                        225ms  served_by=10.10.1.2
+  OK  equip_tractor                     243ms  served_by=10.10.1.4
+  OK  dairy_feed_ration                 192ms  served_by=10.10.1.2
+  OK  pest_snail                        244ms  served_by=10.10.1.3
+  OK  pest_bee_health                   192ms  served_by=10.10.1.2
+  OK  crop_berry_disease                192ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 194ms  served_by=10.10.1.2
+  OK  irrigation_flow_meter             236ms  served_by=10.10.1.4
+  OK  soil_microbiome                   194ms  served_by=10.10.1.2
+  OK  soil_compaction                   243ms  served_by=10.10.1.3
+  OK  soil_compaction                   194ms  served_by=10.10.1.4
+  OK  equip_yield_monitor               193ms  served_by=10.10.1.2
+  OK  pest_whitefly                     192ms  served_by=10.10.1.4
+  OK  crop_soy_disease                  192ms  served_by=10.10.1.4
+  OK  dairy_feed_ration                 187ms  served_by=10.10.1.2
+  OK  weather_forecast                  191ms  served_by=10.10.1.4
+  OK  livestock_poultry                 247ms  served_by=10.10.1.1
+  OK  crop_cotton_disease               191ms  served_by=10.10.1.1
+  OK  equip_tractor                     237ms  served_by=10.10.1.2
+  OK  crop_potato_disease               228ms  served_by=10.10.1.4
+  OK  crop_rice_disease                 202ms  served_by=10.10.1.4
+  OK  irrigation_flow_meter             230ms  served_by=10.10.1.1
+  OK  crop_general_health               196ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           253ms  served_by=10.10.1.2
+  OK  irrigation_water_quality          240ms  served_by=10.10.1.4
+  OK  irrigation_drip_health            253ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 191ms  served_by=10.10.1.2
+  OK  weather_wind_alert                228ms  served_by=10.10.1.1
+  OK  equip_harvester                   196ms  served_by=10.10.1.1
+  OK  crop_citrus_disease               191ms  served_by=10.10.1.2
+  OK  equip_tractor                     200ms  served_by=10.10.1.2
+  OK  soil_moisture                     191ms  served_by=10.10.1.2
+  OK  soil_organic_matter               253ms  served_by=10.10.1.4
+  OK  irrigation_zone_f                 191ms  served_by=10.10.1.2
+  OK  crop_apple_disease                193ms  served_by=10.10.1.4
+  OK  soil_moisture                     181ms  served_by=10.10.1.2
+  OK  weather_dew_point                 235ms  served_by=10.10.1.3
+  OK  soil_phosphorus                   231ms  served_by=10.10.1.1
+  OK  pest_general                      193ms  served_by=10.10.1.3
+  OK  irrigation_water_quality          237ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                191ms  served_by=10.10.1.2
+  OK  equip_fuel_telemetry              231ms  served_by=10.10.1.1
+  OK  crop_canola_disease               238ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 192ms  served_by=10.10.1.2
+
+============================================================
+Results: mode=uniform routing=baseline node=http://10.10.1.1:5000
+============================================================
+  Total requests:  240
+  Successful:      240
+  Failed:          0
+  Latency p50:     194ms
+  Latency p95:     253ms
+  Latency p99:     253ms
+  Latency mean:    213ms
+
+  Per-adapter mean latency (top 10 by request count):
+    soil_moisture                       n=   8  p50=   192ms  [DISK]
+    equip_tractor                       n=   7  p50=   193ms  [DISK]
+    irrigation_water_quality            n=   6  p50=   233ms  [DISK]
+    weather_hail_risk                   n=   6  p50=   192ms  [DISK]
+    pest_general                        n=   6  p50=   195ms  [DISK]
+    crop_stress_drought                 n=   5  p50=   191ms  [DISK]
+    crop_cotton_disease                 n=   5  p50=   242ms  [CPU]
+    pest_snail                          n=   5  p50=   236ms  [DISK]
+    pest_thrips                         n=   4  p50=   193ms  [DISK]
+    equip_gps_guidance                  n=   4  p50=   192ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 51 (21.2%)
+    10.10.1.2: 76 (31.7%)
+    10.10.1.3: 53 (22.1%)
+    10.10.1.4: 60 (25.0%)
+
+Results saved to results_2/baseline_no_s3_uniform.jsonl
