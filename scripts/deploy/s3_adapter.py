@@ -4,13 +4,13 @@ from pathlib import Path
 
 import boto3
 from botocore import UNSIGNED
-from botocore.client import Config
 
 from .config import (
     ADAPTER_PATH,
     S3_BUCKET,
     S3_REGION,
     S3_PREFIX_ROOT,
+    S3_UNSIGNED_ACCESS,
     EXPECTED_ADAPTER_FILES,
     logger,
 )
@@ -27,11 +27,15 @@ def is_safe_rel_path(rel: str) -> bool:
     return True
 
 
-_s3 = boto3.client(
-    "s3",
-    region_name=S3_REGION,
-    config=Config(signature_version=UNSIGNED),
-)
+def _make_s3_client():
+    kwargs = {"service_name": "s3", "region_name": S3_REGION}
+    if S3_UNSIGNED_ACCESS:
+        from botocore.client import Config
+        kwargs["config"] = Config(signature_version=UNSIGNED)
+    return boto3.client(**kwargs)
+
+
+_s3 = _make_s3_client()
 
 def list_adapters_from_s3():
     resp = _s3.list_objects_v2(

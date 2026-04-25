@@ -29,6 +29,12 @@ SERVE_PORT = 5000
 S3_BUCKET = os.getenv("S3_BUCKET", "memlora-adapters-525")
 S3_REGION = os.getenv("S3_REGION", "us-east-2")
 S3_PREFIX_ROOT = os.getenv("S3_PREFIX_ROOT", "adapters")
+S3_UNSIGNED_ACCESS = os.getenv("S3_UNSIGNED_ACCESS", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 USE_S3_ADAPTERS = os.getenv("USE_S3_ADAPTERS", "true").strip().lower() not in {
     "0",
     "false",

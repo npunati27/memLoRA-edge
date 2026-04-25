@@ -44,11 +44,12 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
             ip: 0.0 for ip in self.peer_ips if ip != self.my_ip
         }
         self._peer_adapter_state: dict[str, dict[str, set]] = {
-            name: {"gpu": set(), "cpu": set(), "disk": set()}
+            name: self._empty_tier_map()
             for name in self.lora_names
         }
         for name in self.lora_names:
-            self._peer_adapter_state[name]["disk"].add(self.my_ip)
+            initial_tier = self._get_initial_local_tier(name)
+            self._peer_adapter_state[name][initial_tier].add(self.my_ip)
         self._adapter_state_timestamps: dict[tuple, float] = {}
 
         self._gossip_task = None
@@ -290,10 +291,8 @@ async def reset_cache(request: Request):
     reset_results = {}
     for adapter in adapters:
         if adapter in engine_node._peer_adapter_state:
-            # Clear from all tiers
-            for tier in ["gpu", "cpu", "disk", "s3"]:
-                engine_node._peer_adapter_state[adapter][tier].clear()
-            # S3 remains empty
+            for nodes in engine_node._peer_adapter_state[adapter].values():
+                nodes.clear()
         # Clear local caches
         engine_node._local_gpu_lru.pop(adapter, None)
         engine_node._local_cpu_lru.pop(adapter, None)
