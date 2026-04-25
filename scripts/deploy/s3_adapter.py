@@ -15,6 +15,18 @@ from .config import (
     logger,
 )
 
+
+def is_safe_rel_path(rel: str) -> bool:
+    """Check if rel is a safe relative path (no absolute, no .., no empty segments)."""
+    if os.path.isabs(rel):
+        return False
+    parts = rel.split(os.sep)
+    for part in parts:
+        if part in ("", ".", ".."):
+            return False
+    return True
+
+
 _s3 = boto3.client(
     "s3",
     region_name=S3_REGION,
@@ -76,6 +88,8 @@ def download_adapter_from_s3(adapter_name: str) -> str:
 
     for key in keys:
         rel = key[len(prefix):]
+        if not is_safe_rel_path(rel):
+            raise ValueError(f"Unsafe relative path in S3 key '{key}': '{rel}'")
         out_path = tmp_dir / rel
         out_path.parent.mkdir(parents=True, exist_ok=True)
         _s3.download_file(S3_BUCKET, key, str(out_path))

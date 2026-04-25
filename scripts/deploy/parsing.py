@@ -1,4 +1,5 @@
 import uuid
+import re
 
 from starlette.requests import Request
 
@@ -34,6 +35,8 @@ class ParsingMixin:
             adapter_name = model_name[len(prefix):]
             if not adapter_name:
                 raise ValueError("Missing adapter name after model prefix")
+            if not re.match(r'^[A-Za-z0-9._-]+$', adapter_name):
+                raise ValueError(f"Invalid adapter name: {adapter_name}")
             return self.model_id, adapter_name
         raise ValueError(f"Unsupported model '{model_name}'")
 

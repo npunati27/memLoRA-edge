@@ -63,7 +63,7 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
         self._local_cpu_lru: OrderedDict[str, None] = OrderedDict()
 
         self._measured_rtt: dict[str, float] = {
-            ip: 50.0  
+            ip: 50.0
             for ip in self.peer_ips if ip != self.my_ip
         }
         self._probe_failures: dict[str, int] = {
@@ -109,6 +109,9 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
             except asyncio.CancelledError:
                 pass
         self._gossip_running = False
+
+        if self._aiohttp_session and not self._aiohttp_session.closed:
+            await self._aiohttp_session.close()
 
 
 def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
@@ -279,7 +282,7 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
                 e._gossip_task is not None and not e._gossip_task.done()
             ),
         })
-    
+
     @app.post("/internal/debug/reset_cache")
     async def reset_cache(request: Request):
         import aiohttp
