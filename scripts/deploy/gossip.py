@@ -1,6 +1,7 @@
 import asyncio
 import time
 
+from .bloom import BloomFilter
 from .config import SERVE_PORT, logger
 
 
@@ -87,6 +88,28 @@ class GossipMixin:
         except Exception:
             pass
 
+    # ── Per-peer Bloom (materialized adapters: gpu ∪ cpu ∪ disk) ─────────
+
+    def _sync_peer_presence_bloom(self, peer_ip: str) -> None:
+        """Rebuild Bloom for ``peer_ip`` from ``_peer_adapter_state`` (authoritative)."""
+        if not hasattr(self, "_peer_presence_blooms"):
+            return
+        n = max(len(self._peer_adapter_state), len(getattr(self, "lora_names", [])), 1)
+        bf = BloomFilter.for_capacity(n, false_positive_rate=0.001)
+        for adapter_name, tiers in self._peer_adapter_state.items():
+            if peer_ip in tiers.get("gpu", ()) or peer_ip in tiers.get("cpu", ()) or peer_ip in tiers.get(
+                "disk", ()
+            ):
+                bf.add(adapter_name)
+        self._peer_presence_blooms[peer_ip] = bf
+
+    def _sync_all_peer_presence_blooms(self) -> None:
+        if not hasattr(self, "_peer_presence_blooms"):
+            return
+        for ip in self.peer_ips:
+            if ip != self.my_ip:
+                self._sync_peer_presence_bloom(ip)
+
     # ── Adapter state gossip ──────────────────────────────────────────────
 
     async def _broadcast_state_change(self, adapter_name: str,
@@ -127,6 +150,8 @@ class GossipMixin:
             tier_set.discard(node)
         if new_tier in tiers:
             tiers[new_tier].add(node)
+
+        self._sync_peer_presence_bloom(node)
 
     # ── RTT-based queue queries ───────────────────────────────────────────
 

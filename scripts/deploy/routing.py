@@ -14,6 +14,12 @@ class RoutingMixin:
         if node_ip == self.my_ip:
             return self._get_local_tier(adapter_name)
         peer_tiers = self._peer_adapter_state.get(adapter_name, {})
+        blooms = getattr(self, "_peer_presence_blooms", None) or {}
+        bf = blooms.get(node_ip)
+        if bf is not None and not bf.might_contain(adapter_name):
+            if USE_S3_ADAPTERS:
+                return "s3"
+            return "disk"
         if node_ip in peer_tiers.get("gpu", set()):
             return "gpu"
         if node_ip in peer_tiers.get("cpu", set()):

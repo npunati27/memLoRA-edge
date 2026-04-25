@@ -54,6 +54,8 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
         for name in self.lora_names:
             self._peer_adapter_state[name]["disk"].add(self.my_ip)
         self._adapter_state_timestamps: dict[tuple, float] = {}
+        self._peer_presence_blooms: dict[str, object] = {}
+        self._sync_all_peer_presence_blooms()
 
         self._gossip_task = None
         self._gossip_running = False
@@ -305,6 +307,8 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
                 reset_results[adapter] = "cleared"
             else:
                 reset_results[adapter] = "not_present"
+
+        e._sync_all_peer_presence_blooms()
 
         if fanout:
             async def reset_peer(peer_ip: str):
