@@ -97,6 +97,9 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
                 pass
         self._gossip_running = False
 
+        if self._aiohttp_session and not self._aiohttp_session.closed:
+            await self._aiohttp_session.close()
+
 
 engine_node: MemLoRAEngine | None = None
 
@@ -120,6 +123,8 @@ app.add_middleware(
 
 @app.post("/internal/gossip")
 async def receive_gossip(request: Request):
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     body = await request.json()
     msg_type = body.get("type")
     if msg_type == "queue_length":
@@ -131,6 +136,8 @@ async def receive_gossip(request: Request):
 
 @app.get("/internal/queue")
 async def get_queue_length():
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     return JSONResponse({
         "node": engine_node.my_ip,
         "queue_len": engine_node._ongoing,
@@ -140,6 +147,8 @@ async def get_queue_length():
 
 @app.post("/internal/chat/completions")
 async def internal_chat_completions(request: Request):
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     logger.info(
         f"[endpoint] /internal/chat/completions from "
         f"{request.client.host if request.client else 'unknown'}"
@@ -156,6 +165,8 @@ async def internal_chat_completions(request: Request):
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     e2e_start = time.perf_counter()
     logger.info(
         f"[endpoint] /v1/chat/completions from "
@@ -219,6 +230,8 @@ async def chat_completions(request: Request):
 
 @app.get("/v1/models")
 async def list_models():
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     models = [{"id": engine_node.model_id, "object": "model"}]
     for name in engine_node.lora_names:
         models.append({"id": f"{engine_node.model_id}/{name}", "object": "model"})
@@ -227,6 +240,8 @@ async def list_models():
 
 @app.get("/health")
 async def health():
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     if engine_node._gossip_task is None and not engine_node._gossip_running:
         engine_node._gossip_running = True
         engine_node._gossip_task = asyncio.create_task(engine_node._gossip_queue_loop())
@@ -240,6 +255,8 @@ async def health():
 
 @app.get("/internal/debug/state")
 async def debug_state():
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     return JSONResponse({
         "node": engine_node.my_ip,
         "local_queue": engine_node._ongoing,
@@ -263,6 +280,8 @@ async def debug_state():
 
 @app.post("/internal/debug/reset_cache")
 async def reset_cache(request: Request):
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     import aiohttp
     data = await request.json()
     adapters = data.get("adapters", [])
@@ -272,7 +291,7 @@ async def reset_cache(request: Request):
     for adapter in adapters:
         if adapter in engine_node._peer_adapter_state:
             # Clear from all tiers
-            for tier in ["gpu", "cpu", "disk"]:
+            for tier in ["gpu", "cpu", "disk", "s3"]:
                 engine_node._peer_adapter_state[adapter][tier].clear()
             # S3 remains empty
         # Clear local caches
@@ -308,6 +327,8 @@ async def reset_cache(request: Request):
 
 @app.get("/internal/logs")
 async def get_logs(lines: int = 80):
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     log_path = os.path.join(LOG_DIR, "deploy.log")
     try:
         with open(log_path, "r") as f:
@@ -320,6 +341,8 @@ async def get_logs(lines: int = 80):
 
 @app.get("/internal/cluster")
 async def cluster_state():
+    if engine_node is None:
+        return JSONResponse({"error": "Service not ready"}, status_code=503)
     import aiohttp
 
     nodes = {}

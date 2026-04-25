@@ -37,47 +37,51 @@ class InferenceMixin:
             tier_before = self._get_local_tier(adapter_name)
             lora_path = os.path.join(ADAPTER_PATH, adapter_name)
             load_start = time.perf_counter()
-            if os.path.isdir(lora_path):
-                adapter_source = "local"
-            elif USE_S3_ADAPTERS:
-                try:
-                    logger.info(
-                        f"[inference] request_id={request_id} "
-                        f"Adapter not cached locally, downloading from S3: {adapter_name}"
-                    )
-                    lora_path = await asyncio.to_thread(download_adapter_from_s3, adapter_name)
-                    adapter_source = "s3"
-                    logger.info(
-                        f"[inference] request_id={request_id} "
-                        f"Successfully downloaded adapter: {adapter_name}"
-                    )
-                except FileNotFoundError as e:
+            if not hasattr(self, '_adapter_download_locks'):
+                self._adapter_download_locks = {}
+            lock = self._adapter_download_locks.setdefault(adapter_name, asyncio.Lock())
+            async with lock:
+                if os.path.isdir(lora_path):
+                    adapter_source = "local"
+                elif USE_S3_ADAPTERS:
+                    try:
+                        logger.info(
+                            f"[inference] request_id={request_id} "
+                            f"Adapter not cached locally, downloading from S3: {adapter_name}"
+                        )
+                        lora_path = await asyncio.to_thread(download_adapter_from_s3, adapter_name)
+                        adapter_source = "s3"
+                        logger.info(
+                            f"[inference] request_id={request_id} "
+                            f"Successfully downloaded adapter: {adapter_name}"
+                        )
+                    except FileNotFoundError as e:
+                        logger.error(
+                            f"[inference] request_id={request_id} "
+                            f"Adapter not found in S3: {adapter_name} error={e}"
+                        )
+                        return JSONResponse(
+                            {"error": f"Adapter '{adapter_name}' not found locally or in S3"},
+                            status_code=404,
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"[inference] request_id={request_id} "
+                            f"Failed to download adapter from S3: {e}"
+                        )
+                        return JSONResponse(
+                            {"error": f"Failed to load adapter '{adapter_name}' from S3: {str(e)}"},
+                            status_code=500,
+                        )
+                else:
                     logger.error(
                         f"[inference] request_id={request_id} "
-                        f"Adapter not found in S3: {adapter_name} error={e}"
+                        f"adapter path not found and S3 disabled: {lora_path}"
                     )
                     return JSONResponse(
-                        {"error": f"Adapter '{adapter_name}' not found locally or in S3"},
+                        {"error": f"Adapter '{adapter_name}' not found at {lora_path}"},
                         status_code=404,
                     )
-                except Exception as e:
-                    logger.error(
-                        f"[inference] request_id={request_id} "
-                        f"Failed to download adapter from S3: {e}"
-                    )
-                    return JSONResponse(
-                        {"error": f"Failed to load adapter '{adapter_name}' from S3: {str(e)}"},
-                        status_code=500,
-                    )
-            else:
-                logger.error(
-                    f"[inference] request_id={request_id} "
-                    f"adapter path not found and S3 disabled: {lora_path}"
-                )
-                return JSONResponse(
-                    {"error": f"Adapter '{adapter_name}' not found at {lora_path}"},
-                    status_code=404,
-                )
             adapter_load_ms = (time.perf_counter() - load_start) * 1000
             self.metrics.log(
                 "adapter_load",
