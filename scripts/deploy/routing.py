@@ -1,6 +1,6 @@
 import random
 
-from .config import TIER_RANK
+from .config import TIER_RANK, USE_S3_ADAPTERS
 
 
 class RoutingMixin:
@@ -16,6 +16,12 @@ class RoutingMixin:
             return "gpu"
         if node_ip in peer_tiers.get("cpu", set()):
             return "cpu"
+        if node_ip in peer_tiers.get("disk", set()):
+            return "disk"
+        if node_ip in peer_tiers.get("s3", set()):
+            return "s3"
+        if USE_S3_ADAPTERS:
+            return "s3"
         return "disk"
 
     def _get_known_queue_lengths(self) -> dict[str, int]:

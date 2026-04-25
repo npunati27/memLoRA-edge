@@ -119,7 +119,7 @@ class GossipMixin:
 
         if adapter not in self._peer_adapter_state:
             self._peer_adapter_state[adapter] = {
-                "gpu": set(), "cpu": set(), "disk": set(),
+                "gpu": set(), "cpu": set(), "disk": set(), "s3": set(),
             }
 
         tiers = self._peer_adapter_state[adapter]

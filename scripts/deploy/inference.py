@@ -7,8 +7,8 @@ from starlette.responses import JSONResponse
 from vllm import SamplingParams
 from vllm.lora.request import LoRARequest
 
-from .config import ADAPTER_PATH, SERVE_PORT, logger
-
+from .config import ADAPTER_PATH, SERVE_PORT, logger, USE_S3_ADAPTERS
+from .s3_adapter import download_adapter_from_s3
 
 class InferenceMixin:
     """Local inference execution and request forwarding."""
@@ -30,17 +30,66 @@ class InferenceMixin:
         )
 
         lora_request = None
+        tier_before = None
+        adapter_source = "none"
+        adapter_load_ms = 0.0
         if adapter_name is not None:
+            tier_before = self._get_local_tier(adapter_name)
             lora_path = os.path.join(ADAPTER_PATH, adapter_name)
-            if not os.path.isdir(lora_path):
-                logger.error(
-                    f"[inference] request_id={request_id} "
-                    f"adapter path not found: {lora_path}"
-                )
-                return JSONResponse(
-                    {"error": f"Adapter '{adapter_name}' not found at {lora_path}"},
-                    status_code=400,
-                )
+            load_start = time.perf_counter()
+            if not hasattr(self, '_adapter_download_locks'):
+                self._adapter_download_locks = {}
+            lock = self._adapter_download_locks.setdefault(adapter_name, asyncio.Lock())
+            async with lock:
+                if os.path.isdir(lora_path):
+                    adapter_source = "local"
+                elif USE_S3_ADAPTERS:
+                    try:
+                        logger.info(
+                            f"[inference] request_id={request_id} "
+                            f"Adapter not cached locally, downloading from S3: {adapter_name}"
+                        )
+                        lora_path = await asyncio.to_thread(download_adapter_from_s3, adapter_name)
+                        adapter_source = "s3"
+                        logger.info(
+                            f"[inference] request_id={request_id} "
+                            f"Successfully downloaded adapter: {adapter_name}"
+                        )
+                    except FileNotFoundError as e:
+                        logger.error(
+                            f"[inference] request_id={request_id} "
+                            f"Adapter not found in S3: {adapter_name} error={e}"
+                        )
+                        return JSONResponse(
+                            {"error": f"Adapter '{adapter_name}' not found locally or in S3"},
+                            status_code=404,
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"[inference] request_id={request_id} "
+                            f"Failed to download adapter from S3: {e}"
+                        )
+                        return JSONResponse(
+                            {"error": f"Failed to load adapter '{adapter_name}' from S3: {str(e)}"},
+                            status_code=500,
+                        )
+                else:
+                    logger.error(
+                        f"[inference] request_id={request_id} "
+                        f"adapter path not found and S3 disabled: {lora_path}"
+                    )
+                    return JSONResponse(
+                        {"error": f"Adapter '{adapter_name}' not found at {lora_path}"},
+                        status_code=404,
+                    )
+            adapter_load_ms = (time.perf_counter() - load_start) * 1000
+            self.metrics.log(
+                "adapter_load",
+                request_id=request_id,
+                adapter=adapter_name,
+                source=adapter_source,
+                latency_ms=adapter_load_ms,
+            )
             lora_request = LoRARequest(
                 lora_name=adapter_name,
                 lora_int_id=abs(hash(adapter_name)) % (2**31),
@@ -48,7 +97,6 @@ class InferenceMixin:
             )
 
         if adapter_name is not None:
-            tier_before = self._get_local_tier(adapter_name)
             changes = self._track_local_adapter(adapter_name)
             for adapter, old_tier, new_tier in changes:
                 asyncio.create_task(
@@ -104,7 +152,9 @@ class InferenceMixin:
                 }],
                 "served_by":    self.my_ip,
                 "adapter_name": adapter_name,
-                "tier_before":  tier_before, 
+                "tier_before":  tier_before,
+                "adapter_source": adapter_source,
+                "adapter_load_ms": adapter_load_ms,
             })
         except Exception as e:
             logger.error(
