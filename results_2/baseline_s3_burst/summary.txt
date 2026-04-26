@@ -1,0 +1,543 @@
+
+=== Preflight: node health check ===
+http://10.10.1.1:5000     health=200 ok=True body={"status":"ok","node":"10.10.1.1","ongoing":0}
+http://10.10.1.2:5000     health=200 ok=True body={"status":"ok","node":"10.10.1.2","ongoing":0}
+http://10.10.1.3:5000     health=200 ok=True body={"status":"ok","node":"10.10.1.3","ongoing":0}
+http://10.10.1.4:5000     health=200 ok=True body={"status":"ok","node":"10.10.1.4","ongoing":0}
+Alive nodes: 4/4
+========================================
+
+[burst] 4.0 rps for 120s — 20-request bursts per adapter, then switch
+  OK  crop_growth_stage                 790ms  served_by=10.10.1.2
+  OK  crop_growth_stage                 647ms  served_by=10.10.1.3
+  OK  crop_growth_stage                 648ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 403ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 183ms  served_by=10.10.1.3
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 180ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 681ms  served_by=10.10.1.4
+  OK  crop_growth_stage                 186ms  served_by=10.10.1.2
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.4
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.2
+  OK  crop_growth_stage                 181ms  served_by=10.10.1.4
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.4
+  OK  crop_growth_stage                 235ms  served_by=10.10.1.3
+  OK  crop_growth_stage                 180ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 180ms  served_by=10.10.1.1
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.2
+  OK  crop_growth_stage                 181ms  served_by=10.10.1.4
+  OK  crop_growth_stage                 182ms  served_by=10.10.1.2
+  OK  crop_growth_stage                 180ms  served_by=10.10.1.1
+  [burst] switching to adapter: livestock_poultry
+  OK  livestock_poultry                 511ms  served_by=10.10.1.3
+  OK  livestock_poultry                 452ms  served_by=10.10.1.2
+  OK  livestock_poultry                 424ms  served_by=10.10.1.1
+  OK  livestock_poultry                 182ms  served_by=10.10.1.2
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 181ms  served_by=10.10.1.3
+  OK  livestock_poultry                 499ms  served_by=10.10.1.4
+  OK  livestock_poultry                 192ms  served_by=10.10.1.4
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 181ms  served_by=10.10.1.4
+  OK  livestock_poultry                 181ms  served_by=10.10.1.1
+  OK  livestock_poultry                 183ms  served_by=10.10.1.3
+  OK  livestock_poultry                 182ms  served_by=10.10.1.4
+  OK  livestock_poultry                 227ms  served_by=10.10.1.2
+  OK  livestock_poultry                 181ms  served_by=10.10.1.4
+  OK  livestock_poultry                 182ms  served_by=10.10.1.2
+  OK  livestock_poultry                 181ms  served_by=10.10.1.2
+  OK  livestock_poultry                 184ms  served_by=10.10.1.4
+  OK  livestock_poultry                 181ms  served_by=10.10.1.2
+  OK  livestock_poultry                 233ms  served_by=10.10.1.1
+  [burst] switching to adapter: crop_canola_disease
+  OK  crop_canola_disease               514ms  served_by=10.10.1.3
+  OK  crop_canola_disease               429ms  served_by=10.10.1.2
+  OK  crop_canola_disease               421ms  served_by=10.10.1.4
+  OK  crop_canola_disease               181ms  served_by=10.10.1.4
+  OK  crop_canola_disease               183ms  served_by=10.10.1.2
+  OK  crop_canola_disease               182ms  served_by=10.10.1.2
+  OK  crop_canola_disease               181ms  served_by=10.10.1.4
+  OK  crop_canola_disease               184ms  served_by=10.10.1.2
+  OK  crop_canola_disease               182ms  served_by=10.10.1.2
+  OK  crop_canola_disease               473ms  served_by=10.10.1.1
+  OK  crop_canola_disease               224ms  served_by=10.10.1.3
+  OK  crop_canola_disease               182ms  served_by=10.10.1.2
+  OK  crop_canola_disease               183ms  served_by=10.10.1.3
+  OK  crop_canola_disease               181ms  served_by=10.10.1.1
+  OK  crop_canola_disease               242ms  served_by=10.10.1.4
+  OK  crop_canola_disease               181ms  served_by=10.10.1.3
+  OK  crop_canola_disease               180ms  served_by=10.10.1.1
+  OK  crop_canola_disease               180ms  served_by=10.10.1.3
+  OK  crop_canola_disease               182ms  served_by=10.10.1.2
+  OK  crop_canola_disease               181ms  served_by=10.10.1.2
+  [burst] switching to adapter: crop_peach_disease
+  OK  crop_peach_disease                453ms  served_by=10.10.1.3
+  OK  crop_peach_disease                435ms  served_by=10.10.1.2
+  OK  crop_peach_disease                417ms  served_by=10.10.1.1
+  OK  crop_peach_disease                181ms  served_by=10.10.1.3
+  OK  crop_peach_disease                182ms  served_by=10.10.1.2
+  OK  crop_peach_disease                466ms  served_by=10.10.1.4
+  OK  crop_peach_disease                180ms  served_by=10.10.1.3
+  OK  crop_peach_disease                181ms  served_by=10.10.1.4
+  OK  crop_peach_disease                180ms  served_by=10.10.1.1
+  OK  crop_peach_disease                180ms  served_by=10.10.1.1
+  OK  crop_peach_disease                183ms  served_by=10.10.1.2
+  OK  crop_peach_disease                181ms  served_by=10.10.1.4
+  OK  crop_peach_disease                180ms  served_by=10.10.1.1
+  OK  crop_peach_disease                182ms  served_by=10.10.1.4
+  OK  crop_peach_disease                229ms  served_by=10.10.1.3
+  OK  crop_peach_disease                180ms  served_by=10.10.1.3
+  OK  crop_peach_disease                181ms  served_by=10.10.1.4
+  OK  crop_peach_disease                182ms  served_by=10.10.1.2
+  OK  crop_peach_disease                182ms  served_by=10.10.1.3
+  OK  crop_peach_disease                182ms  served_by=10.10.1.4
+  [burst] switching to adapter: weather_precipitation
+  OK  weather_precipitation             449ms  served_by=10.10.1.3
+  OK  weather_precipitation             495ms  served_by=10.10.1.4
+  OK  weather_precipitation             182ms  served_by=10.10.1.4
+  OK  weather_precipitation             479ms  served_by=10.10.1.1
+  OK  weather_precipitation             180ms  served_by=10.10.1.1
+  OK  weather_precipitation             181ms  served_by=10.10.1.4
+  OK  weather_precipitation             461ms  served_by=10.10.1.2
+  OK  weather_precipitation             181ms  served_by=10.10.1.1
+  OK  weather_precipitation             181ms  served_by=10.10.1.4
+  OK  weather_precipitation             181ms  served_by=10.10.1.4
+  OK  weather_precipitation             231ms  served_by=10.10.1.3
+  OK  weather_precipitation             181ms  served_by=10.10.1.1
+  OK  weather_precipitation             181ms  served_by=10.10.1.4
+  OK  weather_precipitation             180ms  served_by=10.10.1.1
+  OK  weather_precipitation             182ms  served_by=10.10.1.3
+  OK  weather_precipitation             181ms  served_by=10.10.1.3
+  OK  weather_precipitation             242ms  served_by=10.10.1.2
+  OK  weather_precipitation             180ms  served_by=10.10.1.1
+  OK  weather_precipitation             180ms  served_by=10.10.1.1
+  OK  weather_precipitation             182ms  served_by=10.10.1.4
+  [burst] switching to adapter: weather_hail_risk
+  OK  weather_hail_risk                 452ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 408ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 182ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 180ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 180ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 470ms  served_by=10.10.1.2
+  OK  weather_hail_risk                 180ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 438ms  served_by=10.10.1.4
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 182ms  served_by=10.10.1.2
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 241ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.4
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 180ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 182ms  served_by=10.10.1.2
+  OK  weather_hail_risk                 180ms  served_by=10.10.1.1
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.3
+  OK  weather_hail_risk                 181ms  served_by=10.10.1.4
+  [burst] switching to adapter: soil_compaction
+  OK  soil_compaction                   468ms  served_by=10.10.1.2
+  OK  soil_compaction                   458ms  served_by=10.10.1.3
+  OK  soil_compaction                   421ms  served_by=10.10.1.4
+  OK  soil_compaction                   182ms  served_by=10.10.1.2
+  OK  soil_compaction                   182ms  served_by=10.10.1.2
+  OK  soil_compaction                   457ms  served_by=10.10.1.1
+  OK  soil_compaction                   180ms  served_by=10.10.1.1
+  OK  soil_compaction                   182ms  served_by=10.10.1.2
+  OK  soil_compaction                   241ms  served_by=10.10.1.4
+  OK  soil_compaction                   180ms  served_by=10.10.1.1
+  OK  soil_compaction                   182ms  served_by=10.10.1.2
+  OK  soil_compaction                   181ms  served_by=10.10.1.2
+  OK  soil_compaction                   222ms  served_by=10.10.1.3
+  OK  soil_compaction                   181ms  served_by=10.10.1.4
+  OK  soil_compaction                   190ms  served_by=10.10.1.3
+  OK  soil_compaction                   183ms  served_by=10.10.1.2
+  OK  soil_compaction                   181ms  served_by=10.10.1.4
+  OK  soil_compaction                   181ms  served_by=10.10.1.3
+  OK  soil_compaction                   226ms  served_by=10.10.1.1
+  OK  soil_compaction                   181ms  served_by=10.10.1.3
+  [burst] switching to adapter: pest_whitefly
+  OK  pest_whitefly                     478ms  served_by=10.10.1.2
+  OK  pest_whitefly                     234ms  served_by=10.10.1.2
+  OK  pest_whitefly                     423ms  served_by=10.10.1.4
+  OK  pest_whitefly                     398ms  served_by=10.10.1.3
+  OK  pest_whitefly                     417ms  served_by=10.10.1.1
+  OK  pest_whitefly                     181ms  served_by=10.10.1.4
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     181ms  served_by=10.10.1.4
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     181ms  served_by=10.10.1.4
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     243ms  served_by=10.10.1.2
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  OK  pest_whitefly                     182ms  served_by=10.10.1.4
+  OK  pest_whitefly                     182ms  served_by=10.10.1.2
+  OK  pest_whitefly                     180ms  served_by=10.10.1.4
+  OK  pest_whitefly                     182ms  served_by=10.10.1.2
+  OK  pest_whitefly                     180ms  served_by=10.10.1.1
+  [burst] switching to adapter: irrigation_sched_block1
+  OK  irrigation_sched_block1           503ms  served_by=10.10.1.3
+  OK  irrigation_sched_block1           410ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           410ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           179ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.3
+  OK  irrigation_sched_block1           464ms  served_by=10.10.1.4
+  OK  irrigation_sched_block1           182ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.4
+  OK  irrigation_sched_block1           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           182ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.4
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           217ms  served_by=10.10.1.3
+  OK  irrigation_sched_block1           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.2
+  OK  irrigation_sched_block1           181ms  served_by=10.10.1.4
+  [burst] switching to adapter: pest_rootworm
+  OK  pest_rootworm                     453ms  served_by=10.10.1.3
+  OK  pest_rootworm                     209ms  served_by=10.10.1.3
+  OK  pest_rootworm                     417ms  served_by=10.10.1.2
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     181ms  served_by=10.10.1.2
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     181ms  served_by=10.10.1.2
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     454ms  served_by=10.10.1.1
+  OK  pest_rootworm                     465ms  served_by=10.10.1.4
+  OK  pest_rootworm                     228ms  served_by=10.10.1.4
+  OK  pest_rootworm                     182ms  served_by=10.10.1.2
+  OK  pest_rootworm                     182ms  served_by=10.10.1.2
+  OK  pest_rootworm                     183ms  served_by=10.10.1.1
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     186ms  served_by=10.10.1.4
+  OK  pest_rootworm                     182ms  served_by=10.10.1.2
+  OK  pest_rootworm                     180ms  served_by=10.10.1.3
+  OK  pest_rootworm                     181ms  served_by=10.10.1.4
+  [burst] switching to adapter: pest_grasshopper
+  OK  pest_grasshopper                  476ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  483ms  served_by=10.10.1.1
+  OK  pest_grasshopper                  403ms  served_by=10.10.1.3
+  OK  pest_grasshopper                  181ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  185ms  served_by=10.10.1.1
+  OK  pest_grasshopper                  454ms  served_by=10.10.1.2
+  OK  pest_grasshopper                  182ms  served_by=10.10.1.1
+  OK  pest_grasshopper                  182ms  served_by=10.10.1.2
+  OK  pest_grasshopper                  183ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  182ms  served_by=10.10.1.3
+  OK  pest_grasshopper                  180ms  served_by=10.10.1.1
+  OK  pest_grasshopper                  180ms  served_by=10.10.1.1
+  OK  pest_grasshopper                  201ms  served_by=10.10.1.3
+  OK  pest_grasshopper                  184ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  183ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  220ms  served_by=10.10.1.2
+  OK  pest_grasshopper                  182ms  served_by=10.10.1.3
+  OK  pest_grasshopper                  180ms  served_by=10.10.1.3
+  OK  pest_grasshopper                  184ms  served_by=10.10.1.4
+  OK  pest_grasshopper                  182ms  served_by=10.10.1.2
+  [burst] switching to adapter: livestock_poultry
+  OK  livestock_poultry                 248ms  served_by=10.10.1.1
+  OK  livestock_poultry                 194ms  served_by=10.10.1.4
+  OK  livestock_poultry                 193ms  served_by=10.10.1.3
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 194ms  served_by=10.10.1.2
+  OK  livestock_poultry                 182ms  served_by=10.10.1.2
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 182ms  served_by=10.10.1.3
+  OK  livestock_poultry                 182ms  served_by=10.10.1.4
+  OK  livestock_poultry                 181ms  served_by=10.10.1.3
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 181ms  served_by=10.10.1.3
+  OK  livestock_poultry                 181ms  served_by=10.10.1.2
+  OK  livestock_poultry                 180ms  served_by=10.10.1.1
+  OK  livestock_poultry                 181ms  served_by=10.10.1.2
+  OK  livestock_poultry                 182ms  served_by=10.10.1.3
+  OK  livestock_poultry                 184ms  served_by=10.10.1.2
+  OK  livestock_poultry                 238ms  served_by=10.10.1.4
+  OK  livestock_poultry                 182ms  served_by=10.10.1.2
+  OK  livestock_poultry                 181ms  served_by=10.10.1.3
+  [burst] switching to adapter: pest_borer
+  OK  pest_borer                        498ms  served_by=10.10.1.1
+  OK  pest_borer                        457ms  served_by=10.10.1.4
+  OK  pest_borer                        213ms  served_by=10.10.1.4
+  OK  pest_borer                        414ms  served_by=10.10.1.2
+  OK  pest_borer                        181ms  served_by=10.10.1.4
+  OK  pest_borer                        180ms  served_by=10.10.1.1
+  OK  pest_borer                        182ms  served_by=10.10.1.1
+  OK  pest_borer                        448ms  served_by=10.10.1.3
+  OK  pest_borer                        181ms  served_by=10.10.1.4
+  OK  pest_borer                        180ms  served_by=10.10.1.1
+  OK  pest_borer                        180ms  served_by=10.10.1.1
+  OK  pest_borer                        181ms  served_by=10.10.1.3
+  OK  pest_borer                        182ms  served_by=10.10.1.4
+  OK  pest_borer                        242ms  served_by=10.10.1.2
+  OK  pest_borer                        184ms  served_by=10.10.1.2
+  OK  pest_borer                        180ms  served_by=10.10.1.3
+  OK  pest_borer                        181ms  served_by=10.10.1.1
+  OK  pest_borer                        182ms  served_by=10.10.1.4
+  OK  pest_borer                        181ms  served_by=10.10.1.4
+  OK  pest_borer                        180ms  served_by=10.10.1.1
+  [burst] switching to adapter: equip_sprayer
+  OK  equip_sprayer                     449ms  served_by=10.10.1.3
+  OK  equip_sprayer                     489ms  served_by=10.10.1.2
+  OK  equip_sprayer                     406ms  served_by=10.10.1.1
+  OK  equip_sprayer                     179ms  served_by=10.10.1.1
+  OK  equip_sprayer                     203ms  served_by=10.10.1.3
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     488ms  served_by=10.10.1.4
+  OK  equip_sprayer                     181ms  served_by=10.10.1.2
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     185ms  served_by=10.10.1.4
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     182ms  served_by=10.10.1.4
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     181ms  served_by=10.10.1.2
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     181ms  served_by=10.10.1.2
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  OK  equip_sprayer                     180ms  served_by=10.10.1.1
+  [burst] switching to adapter: irrigation_zone_b
+  OK  irrigation_zone_b                 522ms  served_by=10.10.1.3
+  OK  irrigation_zone_b                 420ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 456ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 419ms  served_by=10.10.1.2
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.2
+  OK  irrigation_zone_b                 182ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.3
+  OK  irrigation_zone_b                 182ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 181ms  served_by=10.10.1.2
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 183ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 209ms  served_by=10.10.1.3
+  OK  irrigation_zone_b                 182ms  served_by=10.10.1.2
+  OK  irrigation_zone_b                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_b                 182ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 181ms  served_by=10.10.1.4
+  OK  irrigation_zone_b                 181ms  served_by=10.10.1.3
+  [burst] switching to adapter: pest_slug
+  OK  pest_slug                         619ms  served_by=10.10.1.2
+  OK  pest_slug                         538ms  served_by=10.10.1.3
+  OK  pest_slug                         184ms  served_by=10.10.1.2
+  OK  pest_slug                         557ms  served_by=10.10.1.1
+  OK  pest_slug                         181ms  served_by=10.10.1.3
+  OK  pest_slug                         183ms  served_by=10.10.1.2
+  OK  pest_slug                         181ms  served_by=10.10.1.2
+  OK  pest_slug                         603ms  served_by=10.10.1.4
+  OK  pest_slug                         180ms  served_by=10.10.1.3
+  OK  pest_slug                         181ms  served_by=10.10.1.4
+  OK  pest_slug                         180ms  served_by=10.10.1.1
+  OK  pest_slug                         182ms  served_by=10.10.1.2
+  OK  pest_slug                         180ms  served_by=10.10.1.1
+  OK  pest_slug                         180ms  served_by=10.10.1.1
+  OK  pest_slug                         179ms  served_by=10.10.1.1
+  OK  pest_slug                         181ms  served_by=10.10.1.4
+  OK  pest_slug                         182ms  served_by=10.10.1.2
+  OK  pest_slug                         182ms  served_by=10.10.1.2
+  OK  pest_slug                         181ms  served_by=10.10.1.4
+  OK  pest_slug                         181ms  served_by=10.10.1.2
+  [burst] switching to adapter: soil_phosphorus
+  OK  soil_phosphorus                   454ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   475ms  served_by=10.10.1.3
+  OK  soil_phosphorus                   240ms  served_by=10.10.1.3
+  OK  soil_phosphorus                   182ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   472ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   182ms  served_by=10.10.1.3
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   229ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   483ms  served_by=10.10.1.2
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   181ms  served_by=10.10.1.3
+  OK  soil_phosphorus                   182ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   182ms  served_by=10.10.1.2
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   181ms  served_by=10.10.1.2
+  OK  soil_phosphorus                   180ms  served_by=10.10.1.1
+  OK  soil_phosphorus                   182ms  served_by=10.10.1.4
+  OK  soil_phosphorus                   181ms  served_by=10.10.1.1
+  [burst] switching to adapter: equip_gps_guidance
+  OK  equip_gps_guidance                427ms  served_by=10.10.1.4
+  OK  equip_gps_guidance                445ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                409ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                182ms  served_by=10.10.1.4
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                179ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                183ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                181ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                451ms  served_by=10.10.1.3
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                182ms  served_by=10.10.1.4
+  OK  equip_gps_guidance                182ms  served_by=10.10.1.3
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.1
+  OK  equip_gps_guidance                181ms  served_by=10.10.1.4
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.3
+  OK  equip_gps_guidance                241ms  served_by=10.10.1.2
+  OK  equip_gps_guidance                180ms  served_by=10.10.1.3
+  OK  equip_gps_guidance                181ms  served_by=10.10.1.2
+  [burst] switching to adapter: crop_grape_disease
+  OK  crop_grape_disease                489ms  served_by=10.10.1.1
+  OK  crop_grape_disease                401ms  served_by=10.10.1.2
+  OK  crop_grape_disease                179ms  served_by=10.10.1.2
+  OK  crop_grape_disease                180ms  served_by=10.10.1.1
+  OK  crop_grape_disease                465ms  served_by=10.10.1.4
+  OK  crop_grape_disease                408ms  served_by=10.10.1.3
+  OK  crop_grape_disease                181ms  served_by=10.10.1.2
+  OK  crop_grape_disease                180ms  served_by=10.10.1.3
+  OK  crop_grape_disease                182ms  served_by=10.10.1.4
+  OK  crop_grape_disease                180ms  served_by=10.10.1.3
+  OK  crop_grape_disease                181ms  served_by=10.10.1.2
+  OK  crop_grape_disease                221ms  served_by=10.10.1.1
+  OK  crop_grape_disease                189ms  served_by=10.10.1.1
+  OK  crop_grape_disease                180ms  served_by=10.10.1.1
+  OK  crop_grape_disease                181ms  served_by=10.10.1.2
+  OK  crop_grape_disease                180ms  served_by=10.10.1.4
+  OK  crop_grape_disease                180ms  served_by=10.10.1.4
+  OK  crop_grape_disease                180ms  served_by=10.10.1.1
+  OK  crop_grape_disease                181ms  served_by=10.10.1.2
+  OK  crop_grape_disease                242ms  served_by=10.10.1.3
+  [burst] switching to adapter: crop_oat_disease
+  OK  crop_oat_disease                  458ms  served_by=10.10.1.1
+  OK  crop_oat_disease                  430ms  served_by=10.10.1.3
+  OK  crop_oat_disease                  401ms  served_by=10.10.1.4
+  OK  crop_oat_disease                  423ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.3
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.3
+  OK  crop_oat_disease                  181ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  179ms  served_by=10.10.1.4
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.1
+  OK  crop_oat_disease                  182ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  182ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.3
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.4
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.3
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.4
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.1
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.1
+  OK  crop_oat_disease                  182ms  served_by=10.10.1.2
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.1
+  OK  crop_oat_disease                  180ms  served_by=10.10.1.4
+  [burst] switching to adapter: crop_rice_disease
+  OK  crop_rice_disease                 483ms  served_by=10.10.1.2
+  OK  crop_rice_disease                 443ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 402ms  served_by=10.10.1.1
+  OK  crop_rice_disease                 182ms  served_by=10.10.1.2
+  OK  crop_rice_disease                 181ms  served_by=10.10.1.2
+  OK  crop_rice_disease                 187ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.1
+  OK  crop_rice_disease                 448ms  served_by=10.10.1.4
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.4
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.1
+  OK  crop_rice_disease                 182ms  served_by=10.10.1.2
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.1
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 182ms  served_by=10.10.1.2
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.1
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  OK  crop_rice_disease                 180ms  served_by=10.10.1.3
+  [burst] switching to adapter: irrigation_zone_a
+  OK  irrigation_zone_a                 504ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 406ms  served_by=10.10.1.1
+  OK  irrigation_zone_a                 403ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 181ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 179ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 453ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_a                 182ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 181ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 181ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 182ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.1
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.3
+  OK  irrigation_zone_a                 179ms  served_by=10.10.1.4
+  OK  irrigation_zone_a                 182ms  served_by=10.10.1.2
+  OK  irrigation_zone_a                 180ms  served_by=10.10.1.1
+  [burst] switching to adapter: irrigation_sched_block2
+  OK  irrigation_sched_block2           453ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           209ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           401ms  served_by=10.10.1.4
+  OK  irrigation_sched_block2           416ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           402ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           181ms  served_by=10.10.1.4
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           182ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           181ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.4
+  OK  irrigation_sched_block2           181ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           182ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           182ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           182ms  served_by=10.10.1.2
+  OK  irrigation_sched_block2           181ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.3
+  OK  irrigation_sched_block2           180ms  served_by=10.10.1.1
+  OK  irrigation_sched_block2           179ms  served_by=10.10.1.3
+  [burst] switching to adapter: carbon_footprint_field
+  OK  carbon_footprint_field            501ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            412ms  served_by=10.10.1.1
+  OK  carbon_footprint_field            485ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            396ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            179ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            180ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            180ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            181ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            183ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            180ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            181ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            218ms  served_by=10.10.1.1
+  OK  carbon_footprint_field            219ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            182ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            183ms  served_by=10.10.1.3
+  OK  carbon_footprint_field            182ms  served_by=10.10.1.2
+  OK  carbon_footprint_field            189ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            179ms  served_by=10.10.1.4
+  OK  carbon_footprint_field            190ms  served_by=10.10.1.1
+
+============================================================
+Results: mode=burst routing=baseline node=http://10.10.1.1:5000
+============================================================
+  Total requests:  479
+  Successful:      479
+  Failed:          0
+  Latency p50:     182ms
+  Latency p95:     480ms
+  Latency p99:     607ms
+  Latency mean:    239ms
+
+  Per-adapter mean latency (top 10 by request count):
+    livestock_poultry                   n=  40  p50=   182ms  [DISK]
+    crop_growth_stage                   n=  20  p50=   182ms  [DISK]
+    crop_canola_disease                 n=  20  p50=   182ms  [DISK]
+    crop_peach_disease                  n=  20  p50=   182ms  [DISK]
+    weather_precipitation               n=  20  p50=   181ms  [DISK]
+    weather_hail_risk                   n=  20  p50=   181ms  [DISK]
+    soil_compaction                     n=  20  p50=   182ms  [DISK]
+    pest_whitefly                       n=  20  p50=   181ms  [DISK]
+    irrigation_sched_block1             n=  20  p50=   181ms  [DISK]
+    pest_rootworm                       n=  20  p50=   182ms  [DISK]
+
+  Served by node:
+    10.10.1.1: 132 (27.6%)
+    10.10.1.2: 122 (25.5%)
+    10.10.1.3: 114 (23.8%)
+    10.10.1.4: 111 (23.2%)
+
+Results saved to results_2/baseline_s3_burst/results.jsonl
