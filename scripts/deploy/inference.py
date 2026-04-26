@@ -4,8 +4,6 @@ import asyncio
 import traceback
 
 from starlette.responses import JSONResponse
-from vllm import SamplingParams
-from vllm.lora.request import LoRARequest
 
 from .config import ADAPTER_PATH, SERVE_PORT, logger, USE_S3_ADAPTERS
 from .s3_adapter import download_adapter_from_s3
@@ -14,6 +12,9 @@ class InferenceMixin:
     """Local inference execution and request forwarding."""
 
     async def _serve_local_chat_request(self, parsed: dict) -> JSONResponse:
+        from vllm import SamplingParams
+        from vllm.lora.request import LoRARequest
+
         body = parsed["raw_body"]
         adapter_name = parsed["adapter_name"]
         request_id = parsed["request_id"]

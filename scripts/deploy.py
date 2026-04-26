@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import os, time, requests, uuid, asyncio, json, random, logging, traceback
 from collections import OrderedDict
@@ -31,6 +32,7 @@ PEERS_FILE   = os.path.expanduser("~/peers.json")
 
 MAX_GPU_LORA = 3
 MAX_CPU_LORA = 6
+MAX_QUEUE_LEN = 8
 SERVE_PORT   = 5000
 
 def load_peer_config():
@@ -78,7 +80,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 @serve.deployment(
     num_replicas=1,
     ray_actor_options={"num_gpus": 1, "num_cpus": 8},
-    max_ongoing_requests=8,
+    max_ongoing_requests=MAX_QUEUE_LEN,
 )
 @serve.ingress(app)
 class VLLMDeployment:

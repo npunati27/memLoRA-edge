@@ -1,0 +1,4 @@
+# Generated mock LoRA weights (see scripts/create_adapters.py)
+adapters/*
+!adapters/.gitkeep
+scripts/deploy/__pycache__

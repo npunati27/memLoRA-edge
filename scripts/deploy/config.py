@@ -7,6 +7,8 @@ LOG_DIR = os.path.join(HOME, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
 ROUTING_MODE = os.getenv("ROUTING_MODE", "baseline").strip().lower()
+# CPU mock: same HTTP app/routes/gossip as GPU; no vLLM. Set before importing deployment.
+USE_MOCK_ENGINE = os.getenv("MEMLORA_MOCK", "").strip().lower() in ("1", "true", "yes")
 TIER_RANK = {"gpu": 0, "cpu": 1, "disk": 2, "s3": 3}
 
 logging.basicConfig(
@@ -25,6 +27,14 @@ PEERS_FILE = os.path.expanduser("~/peers.json")
 MAX_GPU_LORA = 3
 MAX_CPU_LORA = 6
 SERVE_PORT = 5000
+RTT_MAX_MS = 50
+MAX_QUEUE_LEN = 8
+MEMORY_COST = {
+    "gpu":  0.0,
+    "cpu":  0.015,
+    "disk": 1.0,
+    "s3":   float("inf"),
+}
 
 S3_BUCKET = os.getenv("S3_BUCKET", "memlora-adapters-525")
 S3_REGION = os.getenv("S3_REGION", "us-east-2")
