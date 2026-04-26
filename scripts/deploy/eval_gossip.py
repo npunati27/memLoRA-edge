@@ -103,10 +103,27 @@ def sample_once(
     error_rows = []
     payload_sum = 0
     active_senders = 0
+    reachable_nodes = 0
+
+    # Estimate per-target clock offset using freshest observer view for each target.
+    # This lets us report skew-normalized staleness for cross-node comparisons.
+    target_clock_offset_s: dict[str, float] = {}
+    for observer in nodes.values():
+        if observer.get("status") != "ok":
+            continue
+        peer_ts = observer.get("peer_timestamps", {}) or {}
+        for target_ip, ts in peer_ts.items():
+            if not isinstance(ts, (int, float)):
+                continue
+            offset = wall_ts - float(ts)
+            best = target_clock_offset_s.get(target_ip)
+            if best is None or offset < best:
+                target_clock_offset_s[target_ip] = offset
 
     for observer_ip, observer in nodes.items():
         if observer.get("status") != "ok":
             continue
+        reachable_nodes += 1
 
         local_queue = observer.get("local_queue")
         if isinstance(local_queue, int):
@@ -119,13 +136,17 @@ def sample_once(
         for target_ip, ts in peer_ts.items():
             if not isinstance(ts, (int, float)):
                 continue
-            age_s = max(0.0, wall_ts - float(ts))
+            raw_age_s = max(0.0, wall_ts - float(ts))
+            offset = target_clock_offset_s.get(target_ip, 0.0)
+            normalized_age_s = max(0.0, raw_age_s - max(0.0, offset))
             staleness_rows.append(
                 {
                     "sample_ts": wall_ts,
                     "observer_node": observer_ip,
                     "target_node": target_ip,
-                    "staleness_s": round(age_s, 6),
+                    "staleness_s": round(raw_age_s, 6),
+                    "staleness_normalized_s": round(normalized_age_s, 6),
+                    "estimated_clock_offset_s": round(offset, 6),
                 }
             )
 
@@ -141,7 +162,8 @@ def sample_once(
                         "estimated_queue": est_q,
                         "true_queue": true_q,
                         "abs_error": abs(est_q - true_q),
-                        "staleness_s": round(age_s, 6),
+                        "staleness_s": round(raw_age_s, 6),
+                        "staleness_normalized_s": round(normalized_age_s, 6),
                     }
                 )
 
@@ -161,6 +183,7 @@ def sample_once(
     overhead_row = {
         "sample_ts": wall_ts,
         "node_count": node_count,
+        "reachable_nodes": reachable_nodes,
         "active_senders": active_senders,
         "estimated_msgs_per_second": round(msgs_per_second, 3),
         "estimated_payload_bytes_per_second": round(payload_bytes_per_second, 3),
@@ -181,12 +204,41 @@ def build_summary(
     args,
 ):
     staleness_vals = [float(r["staleness_s"]) for r in staleness_rows]
+    staleness_norm_vals = [float(r["staleness_normalized_s"]) for r in staleness_rows]
+    clock_offset_vals = [float(r["estimated_clock_offset_s"]) for r in staleness_rows]
     error_vals = [float(r["abs_error"]) for r in error_rows]
     msg_rate_vals = [float(r["estimated_msgs_per_second"]) for r in overhead_rows]
     payload_bps_vals = [float(r["estimated_payload_bytes_per_second"]) for r in overhead_rows]
     total_bps_vals = [float(r["estimated_total_bytes_per_second"]) for r in overhead_rows]
+    reachable_vals = [float(r["reachable_nodes"]) for r in overhead_rows]
+    cluster_node_vals = [float(r["node_count"]) for r in overhead_rows]
 
-    return {
+    expected_obs_per_sample = 0.0
+    observed_obs_per_sample = 0.0
+    coverage_ratio = 0.0
+    if cluster_node_vals and samples > 0:
+        mean_nodes = sum(cluster_node_vals) / len(cluster_node_vals)
+        expected_obs_per_sample = max(0.0, mean_nodes * max(0.0, mean_nodes - 1.0))
+        observed_obs_per_sample = len(staleness_rows) / samples
+        coverage_ratio = (
+            observed_obs_per_sample / expected_obs_per_sample
+            if expected_obs_per_sample > 0
+            else 0.0
+        )
+
+    warnings = []
+    if staleness_vals and percentile(staleness_vals, 95) > 5.0:
+        warnings.append(
+            "Raw staleness appears very high; likely cross-node clock skew. "
+            "Use staleness_normalized_s and sync node clocks (NTP/chrony)."
+        )
+    if coverage_ratio > 0 and coverage_ratio < 0.9:
+        warnings.append(
+            "Staleness coverage is below 90% of expected node-to-node observations. "
+            "One or more nodes may be unreachable or missing peer timestamp entries."
+        )
+
+    summary = {
         "base_url": args.base_url,
         "duration_s_requested": args.duration_s,
         "sample_interval_s": args.sample_interval_s,
@@ -200,6 +252,17 @@ def build_summary(
         "sample_count": samples,
         "staleness_observation_count": len(staleness_rows),
         "queue_error_observation_count": len(error_rows),
+        "reachability": {
+            "cluster_nodes_mean": round(sum(cluster_node_vals) / len(cluster_node_vals), 3)
+            if cluster_node_vals
+            else 0.0,
+            "reachable_nodes_mean": round(sum(reachable_vals) / len(reachable_vals), 3)
+            if reachable_vals
+            else 0.0,
+            "expected_staleness_obs_per_sample": round(expected_obs_per_sample, 3),
+            "observed_staleness_obs_per_sample": round(observed_obs_per_sample, 3),
+            "staleness_observation_coverage_ratio": round(coverage_ratio, 6),
+        },
         "staleness_s": {
             "p50": round(percentile(staleness_vals, 50), 6),
             "p95": round(percentile(staleness_vals, 95), 6),
@@ -207,6 +270,24 @@ def build_summary(
             "max": round(percentile(staleness_vals, 100), 6),
             "mean": round(sum(staleness_vals) / len(staleness_vals), 6)
             if staleness_vals
+            else 0.0,
+        },
+        "staleness_normalized_s": {
+            "p50": round(percentile(staleness_norm_vals, 50), 6),
+            "p95": round(percentile(staleness_norm_vals, 95), 6),
+            "p99": round(percentile(staleness_norm_vals, 99), 6),
+            "max": round(percentile(staleness_norm_vals, 100), 6),
+            "mean": round(sum(staleness_norm_vals) / len(staleness_norm_vals), 6)
+            if staleness_norm_vals
+            else 0.0,
+        },
+        "estimated_clock_offset_s": {
+            "p50": round(percentile(clock_offset_vals, 50), 6),
+            "p95": round(percentile(clock_offset_vals, 95), 6),
+            "p99": round(percentile(clock_offset_vals, 99), 6),
+            "max": round(percentile(clock_offset_vals, 100), 6),
+            "mean": round(sum(clock_offset_vals) / len(clock_offset_vals), 6)
+            if clock_offset_vals
             else 0.0,
         },
         "queue_abs_error": {
@@ -238,6 +319,9 @@ def build_summary(
             ),
         },
     }
+    if warnings:
+        summary["warnings"] = warnings
+    return summary
 
 
 def main():
