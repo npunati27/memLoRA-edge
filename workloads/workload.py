@@ -103,6 +103,28 @@ def burst_sequence(burst_size: int = 20) -> list[str]:
             yield adapter
 
 # ── request sender ────────────────────────────────────────────────────────────
+async def check_nodes(session, node_urls: list[str]):
+    print("\n=== Preflight: node health check ===")
+    alive = []
+
+    for url in node_urls:
+        try:
+            async with session.get(f"{url}/health", timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                text = await resp.text()
+                ok = resp.status == 200
+                print(f"{url:<25} health={resp.status} ok={ok} body={text[:120]}")
+                if ok:
+                    alive.append(url)
+        except Exception as e:
+            print(f"{url:<25} health=FAIL error={e}")
+
+    print(f"Alive nodes: {len(alive)}/{len(node_urls)}")
+    print("=" * 40)
+
+    if len(alive) != len(node_urls):
+        print("WARNING: Not all nodes are reachable before workload starts.")
+
+    return alive
 
 async def send_request(
     session: aiohttp.ClientSession,
@@ -286,12 +308,19 @@ async def main():
                         help="Label for output (baseline or memory)")
     parser.add_argument("--out",      default="results.jsonl")
     parser.add_argument("--concurrency", type=int, default=16)
+    parser.add_argument(
+        "--nodes",
+        default="http://10.10.1.1:5000,http://10.10.1.2:5000,http://10.10.1.3:5000,http://10.10.1.4:5000",
+        help="Comma-separated list of all node URLs for preflight health check",
+    )
     args = parser.parse_args()
 
     semaphore = asyncio.Semaphore(args.concurrency)
     results   = []
 
     async with aiohttp.ClientSession() as session:
+        node_urls = [u.strip() for u in args.nodes.split(",") if u.strip()]
+        await check_nodes(session, node_urls)
         if args.mode == "all":
             for mode in ["uniform", "zipf", "burst"]:
                 mode_results = []
