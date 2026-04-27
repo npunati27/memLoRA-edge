@@ -1,5 +1,5 @@
 ============================================================
-Results: mode=zipf routing=cost nodes=8
+Results: mode=zipf routing=baseline nodes=8
 ============================================================
   Total requests:  478
   Successful:      478
