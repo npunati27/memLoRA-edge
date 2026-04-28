@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 from starlette.responses import JSONResponse
 
+from .bloom import BloomFilter
 from .config import logger, load_peer_config, get_lora_names
 from .metrics import MetricsLogger
 from .lru import LRUMixin
@@ -216,7 +217,7 @@ class MockMemLoRAEngine(
         for name in self.lora_names:
             self._peer_adapter_state[name]["disk"].add(self.my_ip)
         self._adapter_state_timestamps: dict[tuple, float] = {}
-        self._peer_presence_blooms: dict[str, object] = {}
+        self._peer_presence_blooms: dict[str, BloomFilter] = {}
         self._sync_all_peer_presence_blooms()
 
         self._gossip_task = None

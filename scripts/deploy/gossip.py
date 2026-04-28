@@ -4,9 +4,16 @@ import time
 from .bloom import BloomFilter
 from .config import SERVE_PORT, logger
 
+# Tiers that imply weights are present on node (not S3-only / cold catalog).
+_MATERIAL_ADAPTER_TIERS = ("gpu", "cpu", "disk")
+
+
+def _peer_in_material_tiers(peer_ip: str, tiers: dict) -> bool:
+    return any(peer_ip in tiers.get(t, ()) for t in _MATERIAL_ADAPTER_TIERS)
+
 
 class GossipMixin:
-    """Peer gossip: queue-length broadcasting, adapter-state propagation, RTT queries."""
+    """Peer gossip: queue + optional Bloom snapshot, adapter-state deltas, RTT queries."""
 
     def _start_gossip_loop(self):
         """Start the background gossip loop. Safe to call from __init__ after engine ready."""
@@ -47,13 +54,18 @@ class GossipMixin:
             await asyncio.sleep(0.15)
 
     async def _broadcast_queue_length(self):
-        """Send current queue length to all peers."""
+        """Send queue length and a packed materialized-adapter Bloom for this node."""
         msg = {
             "type": "queue_length",
             "node": self.my_ip,
             "queue_len": self._ongoing,
             "ts": time.time(),
         }
+        try:
+            msg["presence_bloom"] = self._pack_local_presence_bloom()
+        except Exception as e:
+            logger.warning(f"[gossip] presence_bloom pack failed: {e}")
+
         await self._broadcast_to_peers(msg)
 
     def _handle_queue_gossip(self, body: dict):
@@ -66,6 +78,12 @@ class GossipMixin:
             if ts > self._peer_queue_timestamps.get(node, 0):
                 self._peer_queue_lengths[node] = queue_len
                 self._peer_queue_timestamps[node] = ts
+
+                pb = body.get("presence_bloom")
+                if isinstance(pb, dict) and hasattr(self, "_peer_presence_blooms"):
+                    bf = BloomFilter.unpack_json(pb)
+                    if bf is not None:
+                        self._peer_presence_blooms[node] = bf
 
     # ── Broadcast helpers ─────────────────────────────────────────────────
 
@@ -90,18 +108,34 @@ class GossipMixin:
 
     # ── Per-peer Bloom (materialized adapters: gpu ∪ cpu ∪ disk) ─────────
 
+    def _materialized_adapter_names_for_peer(self, peer_ip: str):
+        """Yield adapter names where ``peer_ip`` is in gpu, cpu, or disk in our cluster map."""
+        for adapter_name, tiers in self._peer_adapter_state.items():
+            if _peer_in_material_tiers(peer_ip, tiers):
+                yield adapter_name
+
+    def _pack_local_presence_bloom(self) -> dict:
+        """Build JSON-safe Bloom for this node’s materialized adapters (same shape as peers)."""
+        n = max(len(self._peer_adapter_state), len(getattr(self, "lora_names", [])), 1)
+        bf = getattr(self, "_outbound_presence_bloom", None)
+        if bf is None or getattr(bf, "_sized_for_n", -1) != n:
+            bf = BloomFilter.for_capacity(n, false_positive_rate=0.001)
+            self._outbound_presence_bloom = bf
+        bf.refill_from_adapter_names(self._materialized_adapter_names_for_peer(self.my_ip))
+        return bf.pack_json()
+
     def _sync_peer_presence_bloom(self, peer_ip: str) -> None:
-        """Rebuild Bloom for ``peer_ip`` from ``_peer_adapter_state`` (authoritative)."""
+        """Rebuild Bloom for ``peer_ip``: adapter names where that peer is gpu/cpu/disk in our map."""
         if not hasattr(self, "_peer_presence_blooms"):
             return
+        if peer_ip == self.my_ip:
+            return
         n = max(len(self._peer_adapter_state), len(getattr(self, "lora_names", [])), 1)
-        bf = BloomFilter.for_capacity(n, false_positive_rate=0.001)
-        for adapter_name, tiers in self._peer_adapter_state.items():
-            if peer_ip in tiers.get("gpu", ()) or peer_ip in tiers.get("cpu", ()) or peer_ip in tiers.get(
-                "disk", ()
-            ):
-                bf.add(adapter_name)
-        self._peer_presence_blooms[peer_ip] = bf
+        bf = self._peer_presence_blooms.get(peer_ip)
+        if bf is None or getattr(bf, "_sized_for_n", -1) != n:
+            bf = BloomFilter.for_capacity(n, false_positive_rate=0.001)
+            self._peer_presence_blooms[peer_ip] = bf
+        bf.refill_from_adapter_names(self._materialized_adapter_names_for_peer(peer_ip))
 
     def _sync_all_peer_presence_blooms(self) -> None:
         if not hasattr(self, "_peer_presence_blooms"):

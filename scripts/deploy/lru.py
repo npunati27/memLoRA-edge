@@ -84,9 +84,6 @@ class LRUMixin:
         tiers[old_tier].discard(node_ip)
         tiers[new_tier].add(node_ip)
 
-        if hasattr(self, "_sync_peer_presence_bloom"):
-            self._sync_peer_presence_bloom(node_ip)
-
     def _track_local_adapter(self, adapter_name: str):
         """
         Mirror vLLM's LRU eviction logic for the local node.
