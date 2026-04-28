@@ -1,0 +1,44 @@
+============================================================
+Results: mode=burst routing=cost nodes=8
+============================================================
+  Total requests:  479
+  Successful:      479
+  Failed:          0
+  Forwarded:       479 (100.0%)
+  Latency p50:     871ms
+  Latency p95:     919ms
+  Latency p99:     955ms
+  Latency mean:    872ms
+
+  Per-adapter mean latency (top 10 by request count):
+    nutrient_runoff_risk                n=  60  p50=   881ms  [DISK]
+    equip_spreader                      n=  40  p50=   872ms  [DISK]
+    crop_citrus_disease                 n=  40  p50=   854ms  [DISK]
+    irrigation_water_quality            n=  20  p50=   886ms  [DISK]
+    dairy_feed_ration                   n=  20  p50=   864ms  [DISK]
+    crop_stress_drought                 n=  20  p50=   881ms  [DISK]
+    soil_erosion_risk                   n=  20  p50=   869ms  [DISK]
+    crop_corn_disease                   n=  20  p50=   871ms  [GPU]
+    pest_whitefly                       n=  20  p50=   872ms  [DISK]
+    soil_compaction                     n=  20  p50=   864ms  [DISK]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 63 (13.2%)
+    sp26-cs525-0702: 66 (13.8%)
+    sp26-cs525-0703: 58 (12.1%)
+    sp26-cs525-0704: 55 (11.5%)
+    sp26-cs525-0705: 49 (10.2%)
+    sp26-cs525-0706: 60 (12.5%)
+    sp26-cs525-0707: 71 (14.8%)
+    sp26-cs525-0708: 57 (11.9%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 20 (4.2%)
+    sp26-cs525-0702.cs.illinois.edu: 100 (20.9%)
+    sp26-cs525-0703.cs.illinois.edu: 80 (16.7%)
+    sp26-cs525-0705.cs.illinois.edu: 80 (16.7%)
+    sp26-cs525-0706.cs.illinois.edu: 79 (16.5%)
+    sp26-cs525-0707.cs.illinois.edu: 100 (20.9%)
+    sp26-cs525-0708.cs.illinois.edu: 20 (4.2%)
+
+Results saved to results.jsonl

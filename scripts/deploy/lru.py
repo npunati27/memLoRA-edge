@@ -1,5 +1,6 @@
-import os
+from __future__ import annotations
 
+import os
 from .config import ADAPTER_PATH, MAX_GPU_LORA, MAX_CPU_LORA, USE_S3_ADAPTERS
 
 

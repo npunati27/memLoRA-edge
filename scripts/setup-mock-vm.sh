@@ -92,6 +92,7 @@ pip install -q \
     "fastapi>=0.115" \
     "uvicorn[standard]>=0.30" \
     "aiohttp>=3.9" \
+    "boto3" \
     --no-cache-dir
 
 mkdir -p ~/logs ~/adapters

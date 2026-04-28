@@ -8,8 +8,8 @@ environment variables on every run. Env vars still override these values.
 from __future__ import annotations
 
 # Mock inference (separate from tier/S3 emulation; often 0 when using banded delays)
-DEFAULT_MOCK_INFERENCE_DELAY_MS = 0
-DEFAULT_MOCK_INFERENCE_JITTER_MS = 0
+DEFAULT_MOCK_INFERENCE_DELAY_MS = 800
+DEFAULT_MOCK_INFERENCE_JITTER_MS = 100
 DEFAULT_MOCK_RESPONSE_TEXT = (
     "Simulated memLoRA-edge completion (CPU mock). "
     "Tune values in scripts/deploy/defaults.py or MEMLORA_MOCK_* env vars."
@@ -23,10 +23,10 @@ DEFAULT_MOCK_LOG_EXTRA_JSON = ""
 # GPU: hot path; CPU: promote/evict to CPU tier; Disk: local re-load / spill;
 # S3: first disk->GPU load on this node only (see mock_tier_latency).
 DEFAULT_MOCK_LATENCY_GPU_MIN_MS = 1
-DEFAULT_MOCK_LATENCY_GPU_MAX_MS = 10
-DEFAULT_MOCK_LATENCY_CPU_MIN_MS = 10
-DEFAULT_MOCK_LATENCY_CPU_MAX_MS = 100
-DEFAULT_MOCK_LATENCY_DISK_MIN_MS = 50
-DEFAULT_MOCK_LATENCY_DISK_MAX_MS = 300
-DEFAULT_MOCK_LATENCY_S3_MIN_MS = 200
-DEFAULT_MOCK_LATENCY_S3_MAX_MS = 5000
+DEFAULT_MOCK_LATENCY_GPU_MAX_MS = 5
+DEFAULT_MOCK_LATENCY_CPU_MIN_MS = 5
+DEFAULT_MOCK_LATENCY_CPU_MAX_MS = 15
+DEFAULT_MOCK_LATENCY_DISK_MIN_MS = 200
+DEFAULT_MOCK_LATENCY_DISK_MAX_MS = 600
+DEFAULT_MOCK_LATENCY_S3_MIN_MS = 2000
+DEFAULT_MOCK_LATENCY_S3_MAX_MS = 10000

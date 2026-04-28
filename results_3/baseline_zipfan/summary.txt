@@ -1,0 +1,45 @@
+============================================================
+Results: mode=zipf routing=baseline nodes=8
+============================================================
+  Total requests:  478
+  Successful:      478
+  Failed:          0
+  Forwarded:       478 (100.0%)
+  Latency p50:     893ms
+  Latency p95:     1365ms
+  Latency p99:     1474ms
+  Latency mean:    959ms
+
+  Per-adapter mean latency (top 10 by request count):
+    crop_corn_disease                   n= 186  p50=   879ms  [GPU]
+    crop_wheat_disease                  n=  69  p50=   882ms  [GPU]
+    crop_soy_disease                    n=  45  p50=   899ms  [GPU]
+    crop_tomato_disease                 n=  23  p50=   923ms  [CPU]
+    crop_cotton_disease                 n=  20  p50=   894ms  [CPU]
+    crop_general_health                 n=  20  p50=   882ms  [CPU]
+    crop_rice_disease                   n=  15  p50=   909ms  [CPU]
+    crop_potato_disease                 n=  10  p50=  1111ms  [DISK]
+    crop_berry_disease                  n=   9  p50=   935ms  [DISK]
+    crop_oat_disease                    n=   7  p50=  1146ms  [CPU]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 59 (12.3%)
+    sp26-cs525-0702: 70 (14.6%)
+    sp26-cs525-0703: 60 (12.6%)
+    sp26-cs525-0704: 54 (11.3%)
+    sp26-cs525-0705: 79 (16.5%)
+    sp26-cs525-0706: 51 (10.7%)
+    sp26-cs525-0707: 49 (10.3%)
+    sp26-cs525-0708: 56 (11.7%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 66 (13.8%)
+    sp26-cs525-0702.cs.illinois.edu: 57 (11.9%)
+    sp26-cs525-0703.cs.illinois.edu: 60 (12.6%)
+    sp26-cs525-0704.cs.illinois.edu: 57 (11.9%)
+    sp26-cs525-0705.cs.illinois.edu: 54 (11.3%)
+    sp26-cs525-0706.cs.illinois.edu: 63 (13.2%)
+    sp26-cs525-0707.cs.illinois.edu: 61 (12.8%)
+    sp26-cs525-0708.cs.illinois.edu: 60 (12.6%)
+
+Results saved to results.jsonl
