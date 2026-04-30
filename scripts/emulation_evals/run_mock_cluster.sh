@@ -106,13 +106,23 @@ setup_node() {
         "$SSH_USER@$host" bash << EOF
 # no set -euo pipefail here — we want to continue past sudo failures
 
-# clone repo if not already there
+# clone repo if not already there, explicitly using the bloom branch
 if [[ ! -d ~/memLoRA-edge ]]; then
-    echo "[node$idx] Cloning repository..."
-    git clone $REPO_URL ~/memLoRA-edge
+    echo "[node$idx] Cloning repository (branch: bloom)..."
+    git clone -b bloom $REPO_URL ~/memLoRA-edge
 else
-    echo "[node$idx] Repo already exists, pulling latest..."
-    cd ~/memLoRA-edge && git checkout main &&git pull
+    echo "[node$idx] Repo already exists, ensuring bloom branch is active..."
+    cd ~/memLoRA-edge
+    
+    # Check if bloom branch exists locally
+    if git rev-parse --verify bloom >/dev/null 2>&1; then
+        git checkout bloom
+    else
+        echo "[node$idx] Creating local bloom branch..."
+        git checkout -b bloom
+    fi
+    
+    git pull origin bloom
 fi
 
 cd ~/memLoRA-edge

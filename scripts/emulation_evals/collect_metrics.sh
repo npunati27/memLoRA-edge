@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Collects metrics files from all nodes and commits them to main sequentially.
+# Collects metrics files from all nodes and commits them to bloom sequentially.
 # Usage: bash collect_metrics.sh <results_dir>
 # Example: bash collect_metrics.sh results/run1_cost_zipf
 set -euo pipefail
@@ -50,9 +50,9 @@ set -euo pipefail
 
 cd $REPO_PATH
 
-# make sure we're on main and up to date
-git checkout main
-git pull origin main
+# make sure we're on bloom and up to date
+git checkout bloom
+git pull origin bloom
 
 # create results directory if needed
 mkdir -p "$RESULTS_DIR"
@@ -63,7 +63,7 @@ cp ~/logs/$metrics_file "$RESULTS_DIR/$metrics_file"
 # commit and push
 git add "$RESULTS_DIR/$metrics_file"
 git diff --cached --quiet && echo "   already committed, skipping" || git commit -m "metrics: add $metrics_file to $RESULTS_DIR"
-git push origin main
+git push origin bloom
 
 echo "   pushed $metrics_file"
 EOF
@@ -72,6 +72,6 @@ EOF
     echo ""
 done
 
-echo "==> All metrics collected into $RESULTS_DIR on main."
+echo "==> All metrics collected into $RESULTS_DIR on bloom."
 echo "    Pull locally to see results:"
-echo "    git pull origin main"
+echo "    git pull origin bloom"
