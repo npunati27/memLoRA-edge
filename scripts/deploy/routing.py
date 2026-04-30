@@ -13,6 +13,14 @@ class RoutingMixin:
             return "gpu"
         if node_ip == self.my_ip:
             return self._get_local_tier(adapter_name)
+        return self._remote_peer_adapter_tier(node_ip, adapter_name)
+
+    def _remote_peer_adapter_tier(self, node_ip: str, adapter_name: str) -> str:
+        """Resolve tier on a peer using Bloom fast-negative, then exact tier sets."""
+        blooms = getattr(self, "_peer_presence_blooms", None) or {}
+        bf = blooms.get(node_ip)
+        if bf is not None and not bf.might_contain(adapter_name):
+            return "s3" if USE_S3_ADAPTERS else "disk"
         peer_tiers = self._peer_adapter_state.get(adapter_name, {})
         if node_ip in peer_tiers.get("gpu", set()):
             return "gpu"
@@ -22,9 +30,7 @@ class RoutingMixin:
             return "disk"
         if node_ip in peer_tiers.get("s3", set()):
             return "s3"
-        if USE_S3_ADAPTERS:
-            return "s3"
-        return "disk"
+        return "s3" if USE_S3_ADAPTERS else "disk"
 
     def _get_known_queue_lengths(self) -> dict[str, int]:
         queues = {self.my_ip: self._ongoing}
