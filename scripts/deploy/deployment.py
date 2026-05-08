@@ -14,6 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from .bloom import BloomFilter
 from .config import (
     LOG_DIR, MODEL_PATH, ADAPTER_PATH,
     MAX_GPU_LORA, MAX_CPU_LORA, SERVE_PORT,
@@ -54,6 +55,8 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
         for name in self.lora_names:
             self._peer_adapter_state[name]["disk"].add(self.my_ip)
         self._adapter_state_timestamps: dict[tuple, float] = {}
+        self._peer_presence_blooms: dict[str, BloomFilter] = {}
+        self._sync_all_peer_presence_blooms()
 
         self._gossip_task = None
         self._gossip_running = False
@@ -281,6 +284,15 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
             "gossip_task_active": (
                 e._gossip_task is not None and not e._gossip_task.done()
             ),
+            "peer_presence_blooms": {
+                ip: bf.wire_shape()
+                for ip, bf in getattr(e, "_peer_presence_blooms", {}).items()
+            },
+            "outbound_presence_bloom": (
+                e._outbound_presence_bloom.wire_shape()
+                if getattr(e, "_outbound_presence_bloom", None) is not None
+                else None
+            ),
         })
 
     @app.post("/internal/debug/reset_cache")
@@ -305,6 +317,8 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
                 reset_results[adapter] = "cleared"
             else:
                 reset_results[adapter] = "not_present"
+
+        e._sync_all_peer_presence_blooms()
 
         if fanout:
             async def reset_peer(peer_ip: str):
@@ -374,6 +388,15 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
             "gossip_running": e._gossip_running,
             "gossip_task_active": (
                 e._gossip_task is not None and not e._gossip_task.done()
+            ),
+            "peer_presence_blooms": {
+                ip: bf.wire_shape()
+                for ip, bf in getattr(e, "_peer_presence_blooms", {}).items()
+            },
+            "outbound_presence_bloom": (
+                e._outbound_presence_bloom.wire_shape()
+                if getattr(e, "_outbound_presence_bloom", None) is not None
+                else None
             ),
             "logs": log_lines,
         }
