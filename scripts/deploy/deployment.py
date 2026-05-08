@@ -5,6 +5,7 @@ import time
 import asyncio
 import traceback
 import shutil
+import random
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from typing import Any, Callable
@@ -18,8 +19,10 @@ from .bloom import BloomFilter
 from .config import (
     LOG_DIR, MODEL_PATH, ADAPTER_PATH,
     MAX_GPU_LORA, MAX_CPU_LORA, SERVE_PORT,
+    FORWARD_MAX_ATTEMPTS, FORWARD_FAILURE_COOLDOWN_S, FORWARD_RETRY_TIMEOUT_S,
+    FORWARD_TIMEOUT_S,
     ROUTING_MODE, USE_MOCK_ENGINE, logger,
-    load_peer_config, get_lora_names,
+    load_peer_config, get_lora_names, TIER_RANK,
 )
 from .metrics import MetricsLogger
 from .lru import LRUMixin
@@ -73,6 +76,7 @@ class MemLoRAEngine(LRUMixin, RoutingMixin, GossipMixin, ParsingMixin, Inference
             ip: 0
             for ip in self.peer_ips if ip != self.my_ip
         }
+        self._forward_failure_deadlines: dict[str, float] = {}
 
         logger.info(f"[vllm] Node: {self.my_ip}")
         logger.info(f"[vllm] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
@@ -145,6 +149,63 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
         CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
     )
 
+    def _prune_forward_cooldowns(e):
+        now = time.time()
+        stale = [ip for ip, until in e._forward_failure_deadlines.items() if until <= now]
+        for ip in stale:
+            del e._forward_failure_deadlines[ip]
+
+    def _mark_forward_failure(e, target_ip: str, reason: str):
+        until = time.time() + FORWARD_FAILURE_COOLDOWN_S
+        e._forward_failure_deadlines[target_ip] = until
+        logger.warning(
+            f"[fallback] target={target_ip} cooled_down_for_s={FORWARD_FAILURE_COOLDOWN_S} "
+            f"reason={reason}"
+        )
+
+    def _pick_target_with_exclusions(e, adapter_name: str, source_ip: str, excluded: set[str]) -> str:
+        _prune_forward_cooldowns(e)
+        blocked = set(excluded)
+        blocked.update(e._forward_failure_deadlines.keys())
+        all_nodes = [e.my_ip] + [ip for ip in e.peer_ips if ip != e.my_ip]
+        candidates = [ip for ip in all_nodes if ip not in blocked]
+        if not candidates:
+            return e.my_ip
+
+        if ROUTING_MODE == "cost":
+            costs = {node: e._compute_cost(node, adapter_name) for node in candidates}
+            reachable = {node: c for node, c in costs.items() if c != float("inf")}
+            if reachable:
+                best_cost = min(reachable.values())
+                best_nodes = [n for n, c in reachable.items() if c == best_cost]
+                return random.choice(best_nodes)
+            return e.my_ip if e.my_ip in candidates else random.choice(candidates)
+
+        if ROUTING_MODE == "memory":
+            queues = e._get_known_queue_lengths()
+            ranked = []
+            for node in candidates:
+                tier = e._get_node_tier(node, adapter_name)
+                ranked.append((node, TIER_RANK[tier], queues.get(node, 0)))
+            best_rank = min(rank for _, rank, _ in ranked)
+            tier_best = [row for row in ranked if row[1] == best_rank]
+            best_q = min(q for _, _, q in tier_best)
+            queue_best = [node for node, _, q in tier_best if q == best_q]
+            return random.choice(queue_best)
+
+        if len(candidates) == 1:
+            return candidates[0]
+        sampled = random.sample(candidates, 2)
+        queues = e._get_known_queue_lengths()
+        n1, n2 = sampled
+        q1 = queues.get(n1, 0)
+        q2 = queues.get(n2, 0)
+        if q1 < q2:
+            return n1
+        if q2 < q1:
+            return n2
+        return random.choice([n1, n2])
+
     @app.post("/internal/gossip")
     async def receive_gossip(request: Request):
         e = request.app.state.engine
@@ -197,50 +258,96 @@ def create_app(engine_class: Callable[[], Any] | None = None) -> FastAPI:
         request_id = parsed["request_id"]
         adapter_name = parsed["adapter_name"]
 
-        routing_start = time.perf_counter()
-        if ROUTING_MODE == "cost":
-            target_ip = e._choose_target_node_cost(adapter_name, parsed["client_ip"])
-        elif ROUTING_MODE == "memory":
-            target_ip = e._choose_target_node_memory(adapter_name, parsed["client_ip"])
-        else:
-            target_ip = e._choose_target_node_baseline(adapter_name, parsed["client_ip"])
-        routing_time_ms = (time.perf_counter() - routing_start) * 1000
+        excluded_nodes: set[str] = set()
+        attempts_used = 0
+        final_target_ip = e.my_ip
+        fallback_used = False
+        response = None
+        last_failure = ""
 
-        is_local = target_ip == e.my_ip
-        reason = "local" if is_local else "forwarded"
-        logger.info(
-            f"[routing] request_id={request_id} adapter={adapter_name} "
-            f"target={target_ip} reason={reason}"
-        )
-        e.metrics.log(
-            "routing_decision",
-            request_id=request_id,
-            adapter=adapter_name,
-            target_node=target_ip,
-            reason=reason,
-            decision_time_ms=routing_time_ms,
-        )
+        while attempts_used < FORWARD_MAX_ATTEMPTS:
+            attempts_used += 1
+            routing_start = time.perf_counter()
+            target_ip = _pick_target_with_exclusions(
+                e, adapter_name, parsed["client_ip"], excluded_nodes
+            )
+            routing_time_ms = (time.perf_counter() - routing_start) * 1000
 
-        if is_local:
-            response = await e._serve_local_chat_request(parsed)
-        else:
+            is_local = target_ip == e.my_ip
+            reason = "local" if is_local else "forwarded"
+            logger.info(
+                f"[routing] request_id={request_id} adapter={adapter_name} "
+                f"target={target_ip} reason={reason} attempt={attempts_used}"
+            )
+            e.metrics.log(
+                "routing_decision",
+                request_id=request_id,
+                adapter=adapter_name,
+                target_node=target_ip,
+                reason=reason,
+                decision_time_ms=routing_time_ms,
+                attempt=attempts_used,
+                excluded_nodes=sorted(excluded_nodes),
+            )
+
+            final_target_ip = target_ip
+            if is_local:
+                response = await e._serve_local_chat_request(parsed)
+                break
+
             body = dict(parsed["raw_body"])
             body["_client_ip"] = parsed["client_ip"]
             body["_sender_ip"] = e.my_ip
             body["_forward_path"] = parsed["forward_path"] + [e.my_ip]
-            response = await e._forward_chat_request(target_ip, body, request_id)
+            body["_fallback_hop"] = attempts_used - 1
+            attempt_timeout_s = (
+                FORWARD_TIMEOUT_S if attempts_used == 1 else FORWARD_RETRY_TIMEOUT_S
+            )
+            response = await e._forward_chat_request(
+                target_ip,
+                body,
+                request_id,
+                timeout_s=attempt_timeout_s,
+            )
+            if response.status_code == 200:
+                break
+
+            fallback_used = True
+            last_failure = f"forward_status_{response.status_code}"
+            excluded_nodes.add(target_ip)
+            _mark_forward_failure(e, target_ip, last_failure)
+
+            e.metrics.log(
+                "forward_fallback",
+                request_id=request_id,
+                failed_target=target_ip,
+                failure=last_failure,
+                attempt=attempts_used,
+                timeout_s=attempt_timeout_s,
+            )
+
+        if response is None:
+            response = JSONResponse(
+                {"error": "No routing candidates available"},
+                status_code=502,
+            )
 
         e2e_time_ms = (time.perf_counter() - e2e_start) * 1000
         logger.info(
             f"[e2e] request_id={request_id} status={response.status_code} "
-            f"total_ms={e2e_time_ms:.1f} forwarded={not is_local} served_by={target_ip}"
+            f"total_ms={e2e_time_ms:.1f} forwarded={final_target_ip != e.my_ip} "
+            f"served_by={final_target_ip} attempts={attempts_used} fallback_used={fallback_used}"
         )
         e.metrics.log(
             "e2e_latency",
             request_id=request_id,
             total_ms=e2e_time_ms,
-            was_forwarded=not is_local,
-            served_by=target_ip,
+            was_forwarded=final_target_ip != e.my_ip,
+            served_by=final_target_ip,
+            attempts=attempts_used,
+            fallback_used=fallback_used,
+            final_status=response.status_code,
+            last_failure=last_failure,
         )
         return response
 

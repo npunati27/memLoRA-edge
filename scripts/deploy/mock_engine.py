@@ -11,7 +11,7 @@ from collections import OrderedDict
 from starlette.responses import JSONResponse
 
 from .bloom import BloomFilter
-from .config import logger, load_peer_config, get_lora_names
+from .config import FORWARD_TIMEOUT_S, logger, load_peer_config, get_lora_names
 from .metrics import MetricsLogger
 from .lru import LRUMixin
 from .routing import RoutingMixin
@@ -141,8 +141,13 @@ class MockInferenceMixin:
             )
             self._ongoing -= 1
 
-    async def _forward_chat_request(self, target_ip: str, body: dict,
-                                    request_id: str = None) -> JSONResponse:
+    async def _forward_chat_request(
+        self,
+        target_ip: str,
+        body: dict,
+        request_id: str = None,
+        timeout_s: float | None = None,
+    ) -> JSONResponse:
         """Forward to another node (same HTTP contract as production)."""
         import aiohttp
 
@@ -152,11 +157,14 @@ class MockInferenceMixin:
         logger.info(f"[mock-forward] START request_id={request_id} target={target_ip}")
         fwd_start = time.perf_counter()
         success = False
+        effective_timeout_s = (
+            FORWARD_TIMEOUT_S if timeout_s is None else max(0.1, float(timeout_s))
+        )
         try:
             async with aiohttp.ClientSession() as session:
                 resp = await session.post(
                     url, json=body,
-                    timeout=aiohttp.ClientTimeout(total=180),
+                    timeout=aiohttp.ClientTimeout(total=effective_timeout_s),
                 )
                 success = resp.status == 200
                 resp_body = await resp.json()
@@ -236,6 +244,7 @@ class MockMemLoRAEngine(
         self._probe_failures: dict[str, int] = {
             ip: 0 for ip in self.peer_ips if ip != self.my_ip
         }
+        self._forward_failure_deadlines: dict[str, float] = {}
 
         logger.info(f"[mock] Node: {self.my_ip}")
         logger.info(f"[mock] Peers: {[p for p in self.peer_ips if p != self.my_ip]}")
