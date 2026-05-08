@@ -5,7 +5,13 @@ import traceback
 
 from starlette.responses import JSONResponse
 
-from .config import ADAPTER_PATH, SERVE_PORT, logger, USE_S3_ADAPTERS
+from .config import (
+    ADAPTER_PATH,
+    SERVE_PORT,
+    FORWARD_TIMEOUT_S,
+    logger,
+    USE_S3_ADAPTERS,
+)
 from .s3_adapter import download_adapter_from_s3
 
 class InferenceMixin:
@@ -177,8 +183,13 @@ class InferenceMixin:
             )
             self._ongoing -= 1
 
-    async def _forward_chat_request(self, target_ip: str, body: dict,
-                                    request_id: str = None) -> JSONResponse:
+    async def _forward_chat_request(
+        self,
+        target_ip: str,
+        body: dict,
+        request_id: str = None,
+        timeout_s: float | None = None,
+    ) -> JSONResponse:
         """Forward the request to another node, handling network errors gracefully."""
         import aiohttp
 
@@ -186,11 +197,14 @@ class InferenceMixin:
         logger.info(f"[forward] START request_id={request_id} target={target_ip}")
         fwd_start = time.perf_counter()
         success = False
+        effective_timeout_s = (
+            FORWARD_TIMEOUT_S if timeout_s is None else max(0.1, float(timeout_s))
+        )
         try:
             async with aiohttp.ClientSession() as session:
                 resp = await session.post(
                     url, json=body,
-                    timeout=aiohttp.ClientTimeout(total=180),
+                    timeout=aiohttp.ClientTimeout(total=effective_timeout_s),
                 )
                 success = resp.status == 200
                 resp_body = await resp.json()
