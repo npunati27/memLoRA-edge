@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from .bloom import BloomFilter
-from .config import SERVE_PORT, logger
+from .config import GOSSIP_QUEUE_INTERVAL_S, SERVE_PORT, logger
 
 # Tiers that imply weights are present on node (not S3-only / cold catalog).
 _MATERIAL_ADAPTER_TIERS = ("gpu", "cpu", "disk")
@@ -41,7 +41,7 @@ class GossipMixin:
     # ── Queue length gossip ───────────────────────────────────────────────
 
     async def _gossip_queue_loop(self):
-        """Background task that broadcasts local queue length to all peers every 150ms."""
+        """Background task that broadcasts local queue length to all peers periodically."""
         await asyncio.sleep(1)
         peer_count = len([p for p in self.peer_ips if p != self.my_ip])
         logger.info(f"[gossip] Gossip loop active, broadcasting to {peer_count} peers")
@@ -51,7 +51,7 @@ class GossipMixin:
                 await self._broadcast_queue_length()
             except Exception as e:
                 logger.error(f"[gossip] Broadcast error: {e}")
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(GOSSIP_QUEUE_INTERVAL_S)
 
     async def _broadcast_queue_length(self):
         """Send queue length and a packed materialized-adapter Bloom for this node."""

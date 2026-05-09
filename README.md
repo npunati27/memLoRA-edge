@@ -55,8 +55,26 @@ The HTTP server listens on **`SERVE_PORT`** (default **5000**). Endpoints includ
 ### Routing
 
 ```bash
-export ROUTING_MODE=baseline   # default, or: memory
+export ROUTING_MODE=baseline   # default, or: memory, cost
 ```
+
+### Forward fallback (inter-node `/v1/chat/completions` retries)
+
+When routing picks a peer and the HTTP forward fails or returns non-200, the gateway excludes that node briefly and may retry once (configurable). Tune with:
+
+| Variable | Default | Role |
+|----------|---------|------|
+| `MEMLORA_FORWARD_TIMEOUT_S` | `2` | HTTP timeout for the **first** forward attempt (seconds) |
+| `MEMLORA_FORWARD_RETRY_TIMEOUT_S` | `1.5` | HTTP timeout for **retry** attempts (seconds) |
+| `MEMLORA_FORWARD_MAX_ATTEMPTS` | `2` | Max routing+forward attempts per client request |
+| `MEMLORA_FORWARD_FAILURE_COOLDOWN_S` | `1.5` | Seconds to avoid re-picking a node after a failed forward |
+
+### RTT probes and gossip cadence
+
+| Variable | Default | Role |
+|----------|---------|------|
+| `MEMLORA_PROBE_INTERVAL_S` | `5` | Idle time **after one full round** of RTT probes to all peers (`/internal/ping`) before the next round. Set lower (e.g. `0.15`) only for experiments—higher probe rate adds control-plane load. |
+| `MEMLORA_GOSSIP_QUEUE_INTERVAL_S` | `0.15` | Seconds between periodic **queue-length** (and Bloom) gossip broadcasts to all peers. |
 
 ## Dashboard (local browser)
 

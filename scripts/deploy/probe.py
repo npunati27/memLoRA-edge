@@ -1,7 +1,7 @@
 import asyncio
 import time
 import aiohttp
-from .config import SERVE_PORT, logger
+from .config import PROBE_INTERVAL_S, SERVE_PORT, logger
 
 class ProbeMixin:
     
@@ -23,7 +23,7 @@ class ProbeMixin:
                 if peer_ip == self.my_ip:
                     continue
                 await self._probe_peer(peer_ip)
-            await asyncio.sleep(5) 
+            await asyncio.sleep(PROBE_INTERVAL_S)
 
     async def _probe_peer(self, peer_ip: str):
         url = f"http://{peer_ip}:{SERVE_PORT}/internal/ping"

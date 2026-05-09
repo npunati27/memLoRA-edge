@@ -33,6 +33,13 @@ FORWARD_MAX_ATTEMPTS = max(1, int(os.getenv("MEMLORA_FORWARD_MAX_ATTEMPTS", "2")
 FORWARD_FAILURE_COOLDOWN_S = float(
     os.getenv("MEMLORA_FORWARD_FAILURE_COOLDOWN_S", "1.5")
 )
+
+# Pause after probing all peers once (full round); lower for experiments (e.g. 0.15).
+PROBE_INTERVAL_S = max(0.05, float(os.getenv("MEMLORA_PROBE_INTERVAL_S", "5")))
+
+# Periodic queue (+ Bloom) gossip sleep in gossip.py (seconds).
+GOSSIP_QUEUE_INTERVAL_S = max(0.05, float(os.getenv("MEMLORA_GOSSIP_QUEUE_INTERVAL_S", "0.15")))
+
 RTT_MAX_MS = 50
 MAX_QUEUE_LEN = 8
 MEMORY_COST = {
