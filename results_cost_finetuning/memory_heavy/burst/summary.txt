@@ -1,0 +1,313 @@
+==> Distributed workload generator
+    nodes:    8
+      http://sp26-cs525-0701.cs.illinois.edu:5000
+      http://sp26-cs525-0702.cs.illinois.edu:5000
+      http://sp26-cs525-0703.cs.illinois.edu:5000
+      http://sp26-cs525-0704.cs.illinois.edu:5000
+      http://sp26-cs525-0705.cs.illinois.edu:5000
+      http://sp26-cs525-0706.cs.illinois.edu:5000
+      http://sp26-cs525-0707.cs.illinois.edu:5000
+      http://sp26-cs525-0708.cs.illinois.edu:5000
+    mode:     burst
+    rps:      2.0
+    duration: 120s
+    routing:  cost
+    strategy: random
+
+[burst] 2.0 rps for 120s across 8 nodes — 20-request bursts
+  OK → crop_stress_heat                 1634ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_stress_heat                 1134ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → crop_stress_heat                 1492ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → crop_stress_heat                 1061ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → crop_stress_heat                  841ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  830ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_stress_heat                  892ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  912ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  853ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → crop_stress_heat                  950ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_stress_heat                  891ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  882ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  816ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_stress_heat                  853ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_stress_heat                  906ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → crop_stress_heat                  926ms  sent=sp26-cs525-0704  served=sp26-cs525-0707
+  OK → crop_stress_heat                  848ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → crop_stress_heat                  938ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → crop_stress_heat                  886ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  [burst] switching to adapter: irrigation_sched_block1
+  OK → crop_stress_heat                  898ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → irrigation_sched_block1           869ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           880ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           892ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → irrigation_sched_block1          1005ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1          1012ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           924ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           829ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           848ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           865ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           868ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           875ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           958ms  sent=sp26-cs525-0708  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           898ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           858ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           838ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           856ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           872ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           899ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_sched_block1           864ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  [burst] switching to adapter: soil_temp_root
+  OK → irrigation_sched_block1           845ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → soil_temp_root                    831ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → soil_temp_root                    929ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → soil_temp_root                    909ms  sent=sp26-cs525-0704  served=sp26-cs525-0708
+  OK → soil_temp_root                    847ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → soil_temp_root                    932ms  sent=sp26-cs525-0701  served=sp26-cs525-0708
+  OK → soil_temp_root                    895ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → soil_temp_root                    831ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → soil_temp_root                    928ms  sent=sp26-cs525-0701  served=sp26-cs525-0708
+  OK → soil_temp_root                    875ms  sent=sp26-cs525-0701  served=sp26-cs525-0708
+  OK → soil_temp_root                    929ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → soil_temp_root                    868ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → soil_temp_root                    906ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → soil_temp_root                    919ms  sent=sp26-cs525-0701  served=sp26-cs525-0708
+  OK → soil_temp_root                    820ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → soil_temp_root                    854ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → soil_temp_root                    850ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → soil_temp_root                    913ms  sent=sp26-cs525-0704  served=sp26-cs525-0708
+  OK → soil_temp_root                    919ms  sent=sp26-cs525-0702  served=sp26-cs525-0708
+  OK → soil_temp_root                    914ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  [burst] switching to adapter: pest_ant
+  OK → soil_temp_root                    996ms  sent=sp26-cs525-0704  served=sp26-cs525-0708
+  OK → pest_ant                          878ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_ant                          855ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → pest_ant                          927ms  sent=sp26-cs525-0707  served=sp26-cs525-0703
+  OK → pest_ant                          920ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_ant                          950ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_ant                          894ms  sent=sp26-cs525-0708  served=sp26-cs525-0703
+  OK → pest_ant                          867ms  sent=sp26-cs525-0706  served=sp26-cs525-0703
+  OK → pest_ant                          862ms  sent=sp26-cs525-0705  served=sp26-cs525-0703
+  OK → pest_ant                          994ms  sent=sp26-cs525-0707  served=sp26-cs525-0703
+  OK → pest_ant                          902ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_ant                          841ms  sent=sp26-cs525-0707  served=sp26-cs525-0703
+  OK → pest_ant                          894ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_ant                          934ms  sent=sp26-cs525-0707  served=sp26-cs525-0703
+  OK → pest_ant                          900ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → pest_ant                          957ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_ant                          839ms  sent=sp26-cs525-0706  served=sp26-cs525-0703
+  OK → pest_ant                          899ms  sent=sp26-cs525-0705  served=sp26-cs525-0703
+  OK → pest_ant                          833ms  sent=sp26-cs525-0705  served=sp26-cs525-0703
+  OK → pest_ant                          896ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  [burst] switching to adapter: irrigation_water_quality
+  OK → pest_ant                          842ms  sent=sp26-cs525-0705  served=sp26-cs525-0703
+  OK → irrigation_water_quality          917ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → irrigation_water_quality          856ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → irrigation_water_quality          831ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → irrigation_water_quality          862ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → irrigation_water_quality         1022ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → irrigation_water_quality          829ms  sent=sp26-cs525-0701  served=sp26-cs525-0708
+  OK → irrigation_water_quality          860ms  sent=sp26-cs525-0702  served=sp26-cs525-0708
+  OK → irrigation_water_quality          874ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_water_quality          834ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_water_quality          916ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → irrigation_water_quality          926ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_water_quality          871ms  sent=sp26-cs525-0706  served=sp26-cs525-0708
+  OK → irrigation_water_quality          946ms  sent=sp26-cs525-0706  served=sp26-cs525-0708
+  OK → irrigation_water_quality          917ms  sent=sp26-cs525-0704  served=sp26-cs525-0708
+  OK → irrigation_water_quality          899ms  sent=sp26-cs525-0702  served=sp26-cs525-0708
+  OK → irrigation_water_quality          973ms  sent=sp26-cs525-0703  served=sp26-cs525-0708
+  OK → irrigation_water_quality          886ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → irrigation_water_quality          865ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → irrigation_water_quality          914ms  sent=sp26-cs525-0706  served=sp26-cs525-0708
+  [burst] switching to adapter: crop_yield_pred_south
+  OK → irrigation_water_quality          919ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → crop_yield_pred_south             837ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             838ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             846ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             918ms  sent=sp26-cs525-0708  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             883ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             883ms  sent=sp26-cs525-0706  served=sp26-cs525-0704
+  OK → crop_yield_pred_south            1005ms  sent=sp26-cs525-0706  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             865ms  sent=sp26-cs525-0708  served=sp26-cs525-0704
+  OK → crop_yield_pred_south            1009ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             898ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             919ms  sent=sp26-cs525-0706  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             888ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             890ms  sent=sp26-cs525-0707  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             878ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             879ms  sent=sp26-cs525-0706  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             910ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             911ms  sent=sp26-cs525-0705  served=sp26-cs525-0704
+  OK → crop_yield_pred_south            1009ms  sent=sp26-cs525-0705  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             924ms  sent=sp26-cs525-0708  served=sp26-cs525-0704
+  [burst] switching to adapter: nutrient_runoff_risk
+  OK → crop_yield_pred_south             902ms  sent=sp26-cs525-0705  served=sp26-cs525-0704
+  OK → nutrient_runoff_risk              894ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              940ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              901ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              977ms  sent=sp26-cs525-0704  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              909ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              999ms  sent=sp26-cs525-0708  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              840ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              918ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              930ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              820ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              951ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              909ms  sent=sp26-cs525-0704  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              888ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              868ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              867ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              838ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              842ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              866ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  [burst] switching to adapter: irrigation_drip_health
+  OK → nutrient_runoff_risk             1014ms  sent=sp26-cs525-0704  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              945ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → irrigation_drip_health            958ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_drip_health            873ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_drip_health            978ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_drip_health            869ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_drip_health            839ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → irrigation_drip_health            911ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_drip_health            920ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_drip_health            914ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_drip_health            940ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_drip_health            849ms  sent=sp26-cs525-0708  served=sp26-cs525-0701
+  OK → irrigation_drip_health            885ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_drip_health            878ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_drip_health            852ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_drip_health            837ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_drip_health            826ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_drip_health            912ms  sent=sp26-cs525-0708  served=sp26-cs525-0701
+  OK → irrigation_drip_health            903ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_drip_health            939ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_drip_health            843ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  [burst] switching to adapter: nutrient_runoff_risk
+  OK → irrigation_drip_health            967ms  sent=sp26-cs525-0708  served=sp26-cs525-0701
+  OK → nutrient_runoff_risk              969ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              870ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              889ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk             1003ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk             1010ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              892ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              896ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              904ms  sent=sp26-cs525-0704  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              889ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              867ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              978ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              864ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              901ms  sent=sp26-cs525-0702  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              880ms  sent=sp26-cs525-0708  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              821ms  sent=sp26-cs525-0703  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              869ms  sent=sp26-cs525-0708  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              868ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              870ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → nutrient_runoff_risk              876ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  [burst] switching to adapter: irrigation_flow_meter
+  OK → nutrient_runoff_risk              873ms  sent=sp26-cs525-0701  served=sp26-cs525-0707
+  OK → irrigation_flow_meter            1016ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             924ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             906ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             916ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             889ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             939ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             906ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             877ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             868ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             913ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             993ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             867ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             821ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             831ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             934ms  sent=sp26-cs525-0708  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             889ms  sent=sp26-cs525-0706  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             853ms  sent=sp26-cs525-0707  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             878ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → irrigation_flow_meter             973ms  sent=sp26-cs525-0705  served=sp26-cs525-0701
+  [burst] switching to adapter: equip_baler
+  OK → irrigation_flow_meter             859ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → equip_baler                       857ms  sent=sp26-cs525-0701  served=sp26-cs525-0705
+  OK → equip_baler                       865ms  sent=sp26-cs525-0703  served=sp26-cs525-0705
+  OK → equip_baler                       836ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → equip_baler                       842ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → equip_baler                       943ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → equip_baler                       840ms  sent=sp26-cs525-0703  served=sp26-cs525-0705
+  OK → equip_baler                       862ms  sent=sp26-cs525-0704  served=sp26-cs525-0705
+  OK → equip_baler                       860ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → equip_baler                       996ms  sent=sp26-cs525-0701  served=sp26-cs525-0705
+  OK → equip_baler                       862ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → equip_baler                       907ms  sent=sp26-cs525-0703  served=sp26-cs525-0705
+  OK → equip_baler                       833ms  sent=sp26-cs525-0701  served=sp26-cs525-0705
+  OK → equip_baler                       905ms  sent=sp26-cs525-0701  served=sp26-cs525-0705
+  OK → equip_baler                       871ms  sent=sp26-cs525-0701  served=sp26-cs525-0705
+  OK → equip_baler                       931ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_baler                       961ms  sent=sp26-cs525-0703  served=sp26-cs525-0705
+  OK → equip_baler                       843ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → equip_baler                       959ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → equip_baler                       969ms  sent=sp26-cs525-0703  served=sp26-cs525-0705
+  [burst] switching to adapter: crop_stress_drought
+  OK → equip_baler                       866ms  sent=sp26-cs525-0702  served=sp26-cs525-0705
+  OK → crop_stress_drought               992ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_stress_drought               822ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_stress_drought               911ms  sent=sp26-cs525-0705  served=sp26-cs525-0702
+  OK → crop_stress_drought               925ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_stress_drought               908ms  sent=sp26-cs525-0706  served=sp26-cs525-0702
+  OK → crop_stress_drought               946ms  sent=sp26-cs525-0708  served=sp26-cs525-0702
+  OK → crop_stress_drought               910ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_stress_drought               961ms  sent=sp26-cs525-0706  served=sp26-cs525-0702
+  OK → crop_stress_drought               903ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_stress_drought               905ms  sent=sp26-cs525-0701  served=sp26-cs525-0702
+  OK → crop_stress_drought               900ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_stress_drought               817ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_stress_drought               872ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_stress_drought               879ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_stress_drought               945ms  sent=sp26-cs525-0708  served=sp26-cs525-0702
+  OK → crop_stress_drought               941ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_stress_drought               891ms  sent=sp26-cs525-0708  served=sp26-cs525-0702
+  OK → crop_stress_drought               875ms  sent=sp26-cs525-0707  served=sp26-cs525-0702
+  OK → crop_stress_drought               986ms  sent=sp26-cs525-0706  served=sp26-cs525-0702
+  OK → crop_stress_drought               897ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+
+============================================================
+Results: mode=burst routing=cost nodes=8
+============================================================
+  Total requests:  240
+  Successful:      240
+  Failed:          0
+  Forwarded:       240 (100.0%)
+  Latency p50:     894ms
+  Latency p95:     1005ms
+  Latency p99:     1105ms
+  Latency mean:    904ms
+
+  Per-adapter mean latency (top 10 by request count):
+    nutrient_runoff_risk                n=  40  p50=   890ms  [DISK]
+    crop_stress_heat                    n=  20  p50=   895ms  [DISK]
+    irrigation_sched_block1             n=  20  p50=   871ms  [DISK]
+    soil_temp_root                      n=  20  p50=   908ms  [DISK]
+    pest_ant                            n=  20  p50=   895ms  [DISK]
+    irrigation_water_quality            n=  20  p50=   893ms  [DISK]
+    crop_yield_pred_south               n=  20  p50=   894ms  [DISK]
+    irrigation_drip_health              n=  20  p50=   894ms  [DISK]
+    irrigation_flow_meter               n=  20  p50=   898ms  [DISK]
+    equip_baler                         n=  20  p50=   865ms  [DISK]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 32 (13.3%)
+    sp26-cs525-0702: 24 (10.0%)
+    sp26-cs525-0703: 34 (14.2%)
+    sp26-cs525-0704: 27 (11.2%)
+    sp26-cs525-0705: 36 (15.0%)
+    sp26-cs525-0706: 28 (11.7%)
+    sp26-cs525-0707: 35 (14.6%)
+    sp26-cs525-0708: 24 (10.0%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 60 (25.0%)
+    sp26-cs525-0702.cs.illinois.edu: 20 (8.3%)
+    sp26-cs525-0703.cs.illinois.edu: 20 (8.3%)
+    sp26-cs525-0704.cs.illinois.edu: 20 (8.3%)
+    sp26-cs525-0705.cs.illinois.edu: 20 (8.3%)
+    sp26-cs525-0707.cs.illinois.edu: 60 (25.0%)
+    sp26-cs525-0708.cs.illinois.edu: 40 (16.7%)
+
+Results saved to /Users/npunati/Downloads/memLoRA-edge/results_cost_finetuning/memory_heavy/burst/results.jsonl
