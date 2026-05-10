@@ -29,6 +29,9 @@ MAX_CPU_LORA = 6
 SERVE_PORT = 5000
 RTT_MAX_MS = 50
 MAX_QUEUE_LEN = 8
+COST_W_QUEUE   = float(os.getenv("MEMLORA_COST_W_QUEUE",   "0.4"))
+COST_W_MEMORY  = float(os.getenv("MEMLORA_COST_W_MEMORY",  "0.4"))
+COST_W_NETWORK = float(os.getenv("MEMLORA_COST_W_NETWORK", "0.2"))
 MEMORY_COST = {
     "gpu":  0.0,
     "cpu":  0.015,

@@ -40,21 +40,30 @@ MEMLORA_MOCK="1"
 USE_S3_ADAPTERS="1"
 NUM_NODES=8   # default to 8, override with --nodes
 BRANCH="main"
+COST_W_QUEUE="0.4"
+COST_W_MEMORY="0.4"
+COST_W_NETWORK="0.2"
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --nodes)        NUM_NODES="$2"; shift 2 ;;
-        --branch)       BRANCH="$2";    shift 2 ;;
-        --routing-mode) ROUTING_MODE="$2"; shift 2 ;;
-        --mock)         MEMLORA_MOCK="$2"; shift 2 ;;
-        --s3)           USE_S3_ADAPTERS="$2"; shift 2 ;;
-        --user)         SSH_USER="$2"; shift 2 ;;
-        --port)         SSH_PORT="$2"; shift 2 ;;
+        --nodes)          NUM_NODES="$2";      shift 2 ;;
+        --branch)         BRANCH="$2";         shift 2 ;;
+        --routing-mode)   ROUTING_MODE="$2";   shift 2 ;;
+        --mock)           MEMLORA_MOCK="$2";   shift 2 ;;
+        --s3)             USE_S3_ADAPTERS="$2"; shift 2 ;;
+        --cost-w-queue)   COST_W_QUEUE="$2";   shift 2 ;;
+        --cost-w-memory)  COST_W_MEMORY="$2";  shift 2 ;;
+        --cost-w-network) COST_W_NETWORK="$2"; shift 2 ;;
+        --user)           SSH_USER="$2";       shift 2 ;;
+        --port)           SSH_PORT="$2";       shift 2 ;;
         -h|--help)
-            echo "Usage: $0 [--nodes N] [--branch BRANCH] [--routing-mode cost|memory|baseline] [--mock 0|1] [--s3 0|1] [--user USER] [--port PORT]"
-            echo "  --nodes N      Use first N nodes from the list (default: 8, max: 20)"
-            echo "  --branch NAME  Git branch to clone/pull on each node (default: main)"
+            echo "Usage: $0 [--nodes N] [--branch BRANCH] [--routing-mode cost|memory|baseline] [--mock 0|1] [--s3 0|1] [--cost-w-queue W] [--cost-w-memory W] [--cost-w-network W] [--user USER] [--port PORT]"
+            echo "  --nodes N           Use first N nodes from the list (default: 8, max: 20)"
+            echo "  --branch NAME       Git branch to clone/pull on each node (default: main)"
+            echo "  --cost-w-queue W    Cost weight for queue length (default: 0.4)"
+            echo "  --cost-w-memory W   Cost weight for memory tier (default: 0.4)"
+            echo "  --cost-w-network W  Cost weight for network RTT (default: 0.2)"
             exit 0 ;;
         *) echo "Unknown arg: $1" >&2; exit 1 ;;
     esac
@@ -174,6 +183,9 @@ export MEMLORA_MOCK=$MEMLORA_MOCK
 export ROUTING_MODE=$ROUTING_MODE
 export USE_S3_ADAPTERS=$USE_S3_ADAPTERS
 export SERVE_PORT=$SERVE_PORT
+export MEMLORA_COST_W_QUEUE=$COST_W_QUEUE
+export MEMLORA_COST_W_MEMORY=$COST_W_MEMORY
+export MEMLORA_COST_W_NETWORK=$COST_W_NETWORK
 
 nohup python -m scripts.deploy > ~/logs/deploy.log 2>&1 &
 echo "[node$idx] Started pid \$!"
