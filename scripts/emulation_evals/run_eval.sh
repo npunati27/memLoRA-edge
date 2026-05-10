@@ -41,6 +41,9 @@ S3="1"
 CONCURRENCY=16
 NODE_STRATEGY="random"
 SERVE_PORT="${SERVE_PORT:-5000}"
+COST_W_QUEUE="0.4"
+COST_W_MEMORY="0.4"
+COST_W_NETWORK="0.2"
 SSH_USER="${SSH_USER:-npunati2}"
 SSH_PORT="${SSH_PORT:-22}"
 
@@ -59,6 +62,9 @@ while [[ $# -gt 0 ]]; do
         --concurrency)    CONCURRENCY="$2";    shift 2 ;;
         --node-strategy)  NODE_STRATEGY="$2";  shift 2 ;;
         --serve-port)     SERVE_PORT="$2";     shift 2 ;;
+        --cost-w-queue)   COST_W_QUEUE="$2";   shift 2 ;;
+        --cost-w-memory)  COST_W_MEMORY="$2";  shift 2 ;;
+        --cost-w-network) COST_W_NETWORK="$2"; shift 2 ;;
         --user)           SSH_USER="$2";       shift 2 ;;
         --port)           SSH_PORT="$2";       shift 2 ;;
         -h|--help)
@@ -87,6 +93,9 @@ Workload options (workload_distributed.py):
   --duration N            Duration in seconds (default: 120)
   --concurrency N         Max concurrent in-flight requests (default: 16)
   --node-strategy STR     How to pick target node: random (default: random)
+  --cost-w-queue W        Cost weight for queue length (default: 0.4)
+  --cost-w-memory W       Cost weight for memory tier (default: 0.4)
+  --cost-w-network W      Cost weight for network RTT (default: 0.2)
 EOF
             exit 0 ;;
         *) echo "Error: unknown argument '$1'" >&2; exit 1 ;;
@@ -144,13 +153,16 @@ echo ""
 echo "==> [1/5] Starting cluster ($NUM_NODES nodes)..."
 SSH_USER="$SSH_USER" SSH_PORT="$SSH_PORT" SERVE_PORT="$SERVE_PORT" \
     bash "$SCRIPT_DIR/run_mock_cluster.sh" \
-        --nodes         "$NUM_NODES" \
-        --branch        "$BRANCH" \
-        --routing-mode  "$ROUTING_MODE" \
-        --mock          "$MOCK" \
-        --s3            "$S3" \
-        --user          "$SSH_USER" \
-        --port          "$SSH_PORT"
+        --nodes           "$NUM_NODES" \
+        --branch          "$BRANCH" \
+        --routing-mode    "$ROUTING_MODE" \
+        --mock            "$MOCK" \
+        --s3              "$S3" \
+        --cost-w-queue    "$COST_W_QUEUE" \
+        --cost-w-memory   "$COST_W_MEMORY" \
+        --cost-w-network  "$COST_W_NETWORK" \
+        --user            "$SSH_USER" \
+        --port            "$SSH_PORT"
 echo ""
 
 # ── Step 2: Run workload ──────────────────────────────────────────────────────

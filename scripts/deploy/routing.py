@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST, logger, USE_S3_ADAPTERS
+from .config import TIER_RANK, RTT_MAX_MS, MAX_QUEUE_LEN, MEMORY_COST, logger, USE_S3_ADAPTERS, COST_W_QUEUE, COST_W_MEMORY, COST_W_NETWORK
 
 
 class RoutingMixin:
@@ -41,11 +41,12 @@ class RoutingMixin:
 
     def _compute_cost(self, node_ip: str, adapter_name: str) -> float:
         """
-        cost = 0.4 * queue_cost + 0.4 * memory_cost + 0.2 * network_cost
+        cost = COST_W_QUEUE * queue_cost + COST_W_MEMORY * memory_cost + COST_W_NETWORK * network_cost
 
         queue_cost:   normalized queue length [0, 1]
         memory_cost:  tier load penalty {0.0, 0.015, 1.0, inf}
         network_cost: normalized RTT [0, 1], 0 for local node
+        weights:      MEMLORA_COST_W_QUEUE / _MEMORY / _NETWORK env vars (default: 0.4/0.4/0.2)
         """
         if node_ip == self.my_ip:
             queue_len = self._ongoing
@@ -66,7 +67,7 @@ class RoutingMixin:
                 return float("inf") 
             network_cost = min(rtt / RTT_MAX_MS, 1.0)
 
-        return 0.4 * queue_cost + 0.4 * memory_cost + 0.2 * network_cost
+        return COST_W_QUEUE * queue_cost + COST_W_MEMORY * memory_cost + COST_W_NETWORK * network_cost
 
     def _choose_target_node_baseline(self, adapter_name: str, source_ip: str) -> str:
         all_nodes = [self.my_ip] + [ip for ip in self.peer_ips if ip != self.my_ip]
