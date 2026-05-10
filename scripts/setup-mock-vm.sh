@@ -76,7 +76,14 @@ install_base_packages() {
     fi
 }
 
-install_base_packages
+# install_base_packages
+if python3 -c "import pip" 2>/dev/null && command -v git >/dev/null 2>&1; then
+    echo "==> python3/git already installed, skipping package install"
+elif [[ "$SHOULD_SUDO" == true ]]; then
+    install_base_packages
+else
+    echo "==> Skipping package install (--no-sudo)"
+fi
 
 if [[ ! -d ~/venv ]]; then
     python3 -m venv ~/venv
@@ -97,8 +104,14 @@ pip install -q \
 
 mkdir -p ~/logs ~/adapters
 
-PEERS_JSON=$(printf '"%s",' "${NODE_IPS[@]}")
-PEERS_JSON="[${PEERS_JSON%,}]"
+PEERS_JSON="["
+first=true
+for ip in "${NODE_IPS[@]}"; do
+    [[ "$ip" == "$MY_IP" ]] && continue
+    [[ "$first" == true ]] && first=false || PEERS_JSON+=","
+    PEERS_JSON+="\"$ip\""
+done
+PEERS_JSON+="]"
 
 cat > ~/peers.json << PEERS
 {
