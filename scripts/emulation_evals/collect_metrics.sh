@@ -90,7 +90,7 @@ fi
 
 # Pull only if the remote branch already exists
 if git ls-remote --exit-code --heads origin $BRANCH > /dev/null 2>&1; then
-    git pull origin $BRANCH
+    git pull --no-rebase origin $BRANCH
 else
     echo "   Remote branch $BRANCH does not exist yet — will create on push."
 fi
