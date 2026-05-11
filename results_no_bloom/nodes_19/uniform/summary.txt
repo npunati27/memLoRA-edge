@@ -1,0 +1,336 @@
+==> Distributed workload generator
+    nodes:    19
+      http://sp26-cs525-0701.cs.illinois.edu:5000
+      http://sp26-cs525-0702.cs.illinois.edu:5000
+      http://sp26-cs525-0703.cs.illinois.edu:5000
+      http://sp26-cs525-0704.cs.illinois.edu:5000
+      http://sp26-cs525-0705.cs.illinois.edu:5000
+      http://sp26-cs525-0706.cs.illinois.edu:5000
+      http://sp26-cs525-0707.cs.illinois.edu:5000
+      http://sp26-cs525-0708.cs.illinois.edu:5000
+      http://sp26-cs525-0710.cs.illinois.edu:5000
+      http://sp26-cs525-0711.cs.illinois.edu:5000
+      http://sp26-cs525-0712.cs.illinois.edu:5000
+      http://sp26-cs525-0713.cs.illinois.edu:5000
+      http://sp26-cs525-0714.cs.illinois.edu:5000
+      http://sp26-cs525-0715.cs.illinois.edu:5000
+      http://sp26-cs525-0716.cs.illinois.edu:5000
+      http://sp26-cs525-0717.cs.illinois.edu:5000
+      http://sp26-cs525-0718.cs.illinois.edu:5000
+      http://sp26-cs525-0719.cs.illinois.edu:5000
+      http://sp26-cs525-0720.cs.illinois.edu:5000
+    mode:     uniform
+    rps:      2.0
+    duration: 120s
+    routing:  cost
+    strategy: random
+
+[uniform] 2.0 rps for 120s across 19 nodes — equal adapter probability
+  OK → crop_pasture_health               831ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → pest_thrips                       939ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_corn_disease                 904ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → livestock_cattle_health           915ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → pest_snail                        936ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → irrigation_zone_b                 944ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_apple_disease                949ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → crop_berry_disease                859ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → dairy_feed_ration                 868ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → soil_microbiome                   880ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → irrigation_drip_health            892ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → soil_potassium                    882ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → dairy_feed_ration                 927ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → weather_wind_alert                899ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → weather_soil_temp                 934ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_stress_heat                  910ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → crop_canola_disease               959ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → pest_leafhopper                   846ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → pest_weevil                       869ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → equip_tractor                     880ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → weather_hail_risk                 920ms  sent=sp26-cs525-0713  served=sp26-cs525-0713
+  OK → soil_nitrogen                     866ms  sent=sp26-cs525-0713  served=sp26-cs525-0713
+  OK → pest_aphid                        883ms  sent=sp26-cs525-0712  served=sp26-cs525-0712
+  OK → soil_potassium                    846ms  sent=sp26-cs525-0719  served=sp26-cs525-0718
+  OK → soil_compaction                   846ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → soil_nitrogen                     915ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → livestock_poultry                 831ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → pest_spider_mite                  850ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → grain_moisture_bin                883ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → crop_sunflower_disease            891ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → grain_moisture_bin                905ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → soil_phosphorus                   913ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_citrus_disease               910ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → soil_carbon_estimate              935ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → crop_rice_disease                 817ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → weather_precipitation             857ms  sent=sp26-cs525-0712  served=sp26-cs525-0712
+  OK → crop_berry_disease                919ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_stress_heat                  835ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → dairy_milk_quality                890ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → soil_compaction                   900ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_caterpillar                  822ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → crop_rice_disease                 899ms  sent=sp26-cs525-0714  served=sp26-cs525-0717
+  OK → pest_whitefly                     941ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → livestock_pasture_rotation        942ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_tractor                     849ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → weather_frost_alert               938ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → grain_moisture_bin                981ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → pest_slug                         895ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → irrigation_sprinkler_uniform      838ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → irrigation_sched_block2           906ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → equip_fuel_telemetry              929ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_grape_disease                887ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → irrigation_zone_e                 938ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → weather_soil_temp                 847ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → crop_stress_drought               872ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_rice_disease                 974ms  sent=sp26-cs525-0714  served=sp26-cs525-0717
+  OK → soil_compaction                   991ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 918ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → nutrient_runoff_risk              902ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → crop_yield_pred_north             848ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → weather_hail_risk                 875ms  sent=sp26-cs525-0720  served=sp26-cs525-0713
+  OK → soil_ph                           824ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → equip_tractor                     949ms  sent=sp26-cs525-0716  served=sp26-cs525-0717
+  OK → pest_cutworm                      846ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → crop_stress_drought               969ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_sprinkler_uniform      876ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → carbon_footprint_field            887ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → equip_fuel_telemetry              871ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_cotton_disease              1011ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → soil_potassium                    898ms  sent=sp26-cs525-0713  served=sp26-cs525-0718
+  OK → weather_wind_alert                932ms  sent=sp26-cs525-0718  served=sp26-cs525-0705
+  OK → pest_spider_mite                  868ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → equip_tractor                     892ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → weather_precipitation             898ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → equip_fuel_telemetry              872ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → irrigation_zone_d                 884ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → crop_sunflower_disease            900ms  sent=sp26-cs525-0713  served=sp26-cs525-0711
+  OK → crop_ndvi_zones                   914ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → equip_spreader                    949ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → crop_canola_disease               875ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → crop_ndvi_zones                   939ms  sent=sp26-cs525-0701  served=sp26-cs525-0702
+  OK → crop_potato_disease               842ms  sent=sp26-cs525-0720  served=sp26-cs525-0720
+  OK → crop_stress_drought               961ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → pest_general                      910ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → crop_wheat_disease                908ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → crop_potato_disease               904ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → equip_sprayer                     921ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → crop_wheat_disease                872ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → irrigation_drip_health            844ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_aphid                        901ms  sent=sp26-cs525-0714  served=sp26-cs525-0712
+  OK → equip_tractor                     948ms  sent=sp26-cs525-0712  served=sp26-cs525-0717
+  OK → pest_leafhopper                   862ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_grape_disease                857ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → weather_dew_point                 854ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → pest_bee_health                   887ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → soil_n_source                     848ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → dairy_milk_quality                911ms  sent=sp26-cs525-0718  served=sp26-cs525-0716
+  OK → pest_weevil                       827ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → irrigation_zone_d                1009ms  sent=sp26-cs525-0711  served=sp26-cs525-0715
+  OK → dairy_milk_quality               1108ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_yield_pred_south             955ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → crop_sunflower_disease            919ms  sent=sp26-cs525-0720  served=sp26-cs525-0711
+  OK → pest_caterpillar                  876ms  sent=sp26-cs525-0714  served=sp26-cs525-0719
+  OK → weather_evapotranspiration        842ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → irrigation_zone_d                 896ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_harvest_window               854ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → soil_moisture                    1091ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → weather_precipitation            1017ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → irrigation_sched_block2           868ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_aphid                        964ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → crop_barley_disease              1465ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → crop_wheat_disease                895ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_stress_drought               883ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → equip_fuel_telemetry              912ms  sent=sp26-cs525-0711  served=sp26-cs525-0718
+  OK → carbon_footprint_field           1006ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_general_health               916ms  sent=sp26-cs525-0713  served=sp26-cs525-0713
+  OK → pest_general                      927ms  sent=sp26-cs525-0712  served=sp26-cs525-0718
+  OK → grain_storage_temp                924ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_gps_guidance                838ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → pest_snail                       1441ms  sent=sp26-cs525-0715  served=sp26-cs525-0718
+  OK → equip_sprayer                     904ms  sent=sp26-cs525-0711  served=sp26-cs525-0718
+  OK → pest_caterpillar                  828ms  sent=sp26-cs525-0714  served=sp26-cs525-0719
+  OK → soil_salinity                     914ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → grain_moisture_bin                989ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → crop_wheat_disease                881ms  sent=sp26-cs525-0720  served=sp26-cs525-0717
+  OK → weather_wind_alert                915ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_cutworm                      927ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → pest_cutworm                      842ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_stress_drought               846ms  sent=sp26-cs525-0719  served=sp26-cs525-0715
+  OK → weather_forecast                  859ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → grain_storage_temp                866ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_cotton_disease               929ms  sent=sp26-cs525-0712  served=sp26-cs525-0711
+  OK → grain_moisture_bin                907ms  sent=sp26-cs525-0713  served=sp26-cs525-0715
+  OK → soil_salinity                     860ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → soil_compaction                   911ms  sent=sp26-cs525-0713  served=sp26-cs525-0716
+  OK → weather_humidity                  923ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → soil_nitrogen                     836ms  sent=sp26-cs525-0718  served=sp26-cs525-0713
+  OK → weather_soil_temp                 906ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_berry_disease                864ms  sent=sp26-cs525-0706  served=sp26-cs525-0707
+  OK → dairy_feed_ration                1174ms  sent=sp26-cs525-0719  served=sp26-cs525-0718
+  OK → crop_grape_disease                872ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → livestock_cattle_health           931ms  sent=sp26-cs525-0718  served=sp26-cs525-0704
+  OK → irrigation_drip_health            896ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → crop_stress_drought               921ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → crop_pasture_health              1299ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → weather_hail_risk                 908ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → soil_organic_matter               867ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → dairy_feed_ration                1186ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → pest_bee_health                   931ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_peach_disease                871ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → equip_gps_guidance                858ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → crop_apple_disease               1013ms  sent=sp26-cs525-0712  served=sp26-cs525-0715
+  OK → crop_stress_drought               917ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → soil_nitrogen                     918ms  sent=sp26-cs525-0718  served=sp26-cs525-0713
+  OK → pest_borer                        927ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → crop_wheat_disease                878ms  sent=sp26-cs525-0720  served=sp26-cs525-0717
+  OK → dairy_feed_ration                 847ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → pest_beneficial_count             880ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → irrigation_water_quality         1169ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → dairy_milk_quality                867ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_rootworm                     893ms  sent=sp26-cs525-0720  served=sp26-cs525-0720
+  OK → equip_sensor                      898ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  ERR  equip_yield_monitor                 1ms  sent_to=http://sp26-cs525-0712.cs.illinois.edu:5000  Server disconnected
+  OK → weather_frost_alert              1256ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → weather_evapotranspiration        937ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → pest_borer                       1195ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → weather_hail_risk                 866ms  sent=sp26-cs525-0719  served=sp26-cs525-0713
+  OK → equip_harvester                   968ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → crop_corn_disease                 849ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → weather_wind_alert                903ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → dairy_feed_ration                 835ms  sent=sp26-cs525-0717  served=sp26-cs525-0718
+  OK → crop_barley_disease               897ms  sent=sp26-cs525-0715  served=sp26-cs525-0718
+  OK → crop_stress_heat                  928ms  sent=sp26-cs525-0719  served=sp26-cs525-0715
+  OK → equip_harvester                   899ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → equip_tractor                     842ms  sent=sp26-cs525-0718  served=sp26-cs525-0717
+  OK → crop_sunflower_disease            979ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → weather_wind_alert                852ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → weather_dew_point                 860ms  sent=sp26-cs525-0719  served=sp26-cs525-0714
+  OK → soil_phosphorus                   884ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → weather_hail_risk                1407ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → soil_carbon_estimate             1352ms  sent=sp26-cs525-0716  served=sp26-cs525-0718
+  OK → soil_microbiome                  1361ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → crop_harvest_window               945ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → crop_wheat_disease                865ms  sent=sp26-cs525-0719  served=sp26-cs525-0717
+  OK → crop_yield_pred_south             863ms  sent=sp26-cs525-0718  served=sp26-cs525-0714
+  OK → weather_soil_temp                 900ms  sent=sp26-cs525-0718  served=sp26-cs525-0714
+  OK → irrigation_water_quality          919ms  sent=sp26-cs525-0715  served=sp26-cs525-0718
+  OK → pest_bee_health                   907ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → irrigation_pressure              1272ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → soil_salinity                     849ms  sent=sp26-cs525-0718  served=sp26-cs525-0704
+  OK → crop_stress_drought               913ms  sent=sp26-cs525-0714  served=sp26-cs525-0715
+  OK → crop_grape_disease               1197ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → soil_carbon_estimate              857ms  sent=sp26-cs525-0711  served=sp26-cs525-0718
+  OK → crop_cotton_disease               877ms  sent=sp26-cs525-0713  served=sp26-cs525-0711
+  OK → nutrient_runoff_risk             1367ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → pest_thrips                      1090ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → irrigation_sched_block2           854ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_potato_disease               888ms  sent=sp26-cs525-0705  served=sp26-cs525-0707
+  OK → crop_tomato_disease               835ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_cotton_disease               831ms  sent=sp26-cs525-0714  served=sp26-cs525-0711
+  OK → weather_dew_point                1219ms  sent=sp26-cs525-0707  served=sp26-cs525-0707
+  OK → crop_general_health               839ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → soil_potassium                   1037ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → pest_cutworm                      913ms  sent=sp26-cs525-0711  served=sp26-cs525-0717
+  OK → nutrient_runoff_risk              963ms  sent=sp26-cs525-0708  served=sp26-cs525-0707
+  OK → soil_potassium                   1293ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → pest_borer                        869ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → soil_phosphorus                   843ms  sent=sp26-cs525-0718  served=sp26-cs525-0711
+  OK → equip_sprayer                     904ms  sent=sp26-cs525-0712  served=sp26-cs525-0718
+  OK → soil_n_source                     916ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → equip_spreader                    927ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → weather_frost_alert              1024ms  sent=sp26-cs525-0714  served=sp26-cs525-0718
+  OK → pest_spider_mite                  947ms  sent=sp26-cs525-0713  served=sp26-cs525-0717
+  OK → pest_caterpillar                  958ms  sent=sp26-cs525-0716  served=sp26-cs525-0719
+  OK → soil_nitrogen                     969ms  sent=sp26-cs525-0711  served=sp26-cs525-0713
+  OK → pest_grasshopper                  837ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → pest_leafhopper                   890ms  sent=sp26-cs525-0712  served=sp26-cs525-0719
+  OK → crop_apple_disease               1223ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → irrigation_zone_d                 929ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → crop_tomato_disease               921ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → equip_yield_monitor               942ms  sent=sp26-cs525-0714  served=sp26-cs525-0714
+  OK → equip_drone                       836ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → equip_fuel_telemetry             1343ms  sent=sp26-cs525-0717  served=sp26-cs525-0718
+  OK → crop_apple_disease                885ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → crop_alfalfa_health              1169ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_tractor                     843ms  sent=sp26-cs525-0716  served=sp26-cs525-0717
+  OK → soil_moisture                    1404ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_soy_disease                  914ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → weather_heat_index               1475ms  sent=sp26-cs525-0718  served=sp26-cs525-0718
+  OK → irrigation_flow_meter            1392ms  sent=sp26-cs525-0718  served=sp26-cs525-0705
+  OK → irrigation_sched_block2           912ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → irrigation_water_quality          898ms  sent=sp26-cs525-0717  served=sp26-cs525-0718
+  OK → irrigation_drip_health           1013ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → carbon_footprint_field           1377ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → weather_evapotranspiration        892ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → crop_stress_heat                 1130ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → pest_grasshopper                  845ms  sent=sp26-cs525-0714  served=sp26-cs525-0715
+  OK → pest_leafhopper                   868ms  sent=sp26-cs525-0717  served=sp26-cs525-0719
+  OK → weather_evapotranspiration       1024ms  sent=sp26-cs525-0715  served=sp26-cs525-0716
+  OK → equip_fuel_telemetry              931ms  sent=sp26-cs525-0717  served=sp26-cs525-0718
+
+============================================================
+Results: mode=uniform routing=cost nodes=19
+============================================================
+  Total requests:  240
+  Successful:      239
+  Failed:          1
+  Forwarded:       239 (100.0%)
+  Latency p50:     904ms
+  Latency p95:     1294ms
+  Latency p99:     1428ms
+  Latency mean:    941ms
+
+  Per-adapter mean latency (top 10 by request count):
+    crop_stress_drought                 n=   8  p50=   915ms  [DISK]
+    equip_tractor                       n=   7  p50=   880ms  [DISK]
+    dairy_feed_ration                   n=   6  p50=   898ms  [DISK]
+    equip_fuel_telemetry                n=   6  p50=   921ms  [DISK]
+    crop_wheat_disease                  n=   6  p50=   879ms  [GPU]
+    soil_potassium                      n=   5  p50=   898ms  [DISK]
+    weather_wind_alert                  n=   5  p50=   903ms  [DISK]
+    weather_hail_risk                   n=   5  p50=   908ms  [DISK]
+    soil_nitrogen                       n=   5  p50=   915ms  [DISK]
+    grain_moisture_bin                  n=   5  p50=   907ms  [DISK]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 8 (3.3%)
+    sp26-cs525-0702: 18 (7.5%)
+    sp26-cs525-0703: 6 (2.5%)
+    sp26-cs525-0704: 7 (2.9%)
+    sp26-cs525-0705: 15 (6.2%)
+    sp26-cs525-0706: 19 (7.9%)
+    sp26-cs525-0707: 15 (6.2%)
+    sp26-cs525-0708: 12 (5.0%)
+    sp26-cs525-0710: 7 (2.9%)
+    sp26-cs525-0711: 13 (5.4%)
+    sp26-cs525-0712: 9 (3.8%)
+    sp26-cs525-0713: 9 (3.8%)
+    sp26-cs525-0714: 16 (6.7%)
+    sp26-cs525-0715: 13 (5.4%)
+    sp26-cs525-0716: 16 (6.7%)
+    sp26-cs525-0717: 13 (5.4%)
+    sp26-cs525-0718: 27 (11.2%)
+    sp26-cs525-0719: 11 (4.6%)
+    sp26-cs525-0720: 6 (2.5%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 6 (2.5%)
+    sp26-cs525-0702.cs.illinois.edu: 18 (7.5%)
+    sp26-cs525-0703.cs.illinois.edu: 8 (3.3%)
+    sp26-cs525-0704.cs.illinois.edu: 9 (3.8%)
+    sp26-cs525-0705.cs.illinois.edu: 20 (8.4%)
+    sp26-cs525-0706.cs.illinois.edu: 17 (7.1%)
+    sp26-cs525-0707.cs.illinois.edu: 16 (6.7%)
+    sp26-cs525-0708.cs.illinois.edu: 10 (4.2%)
+    sp26-cs525-0710.cs.illinois.edu: 7 (2.9%)
+    sp26-cs525-0711.cs.illinois.edu: 13 (5.4%)
+    sp26-cs525-0712.cs.illinois.edu: 3 (1.3%)
+    sp26-cs525-0713.cs.illinois.edu: 8 (3.3%)
+    sp26-cs525-0714.cs.illinois.edu: 10 (4.2%)
+    sp26-cs525-0715.cs.illinois.edu: 18 (7.5%)
+    sp26-cs525-0716.cs.illinois.edu: 13 (5.4%)
+    sp26-cs525-0717.cs.illinois.edu: 19 (7.9%)
+    sp26-cs525-0718.cs.illinois.edu: 33 (13.8%)
+    sp26-cs525-0719.cs.illinois.edu: 9 (3.8%)
+    sp26-cs525-0720.cs.illinois.edu: 2 (0.8%)
+
+Results saved to /Users/npunati/Downloads/memLoRA-edge/results_no_bloom/nodes_19/uniform/results.jsonl
