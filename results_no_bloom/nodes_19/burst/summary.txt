@@ -1,0 +1,343 @@
+==> Distributed workload generator
+    nodes:    19
+      http://sp26-cs525-0701.cs.illinois.edu:5000
+      http://sp26-cs525-0702.cs.illinois.edu:5000
+      http://sp26-cs525-0703.cs.illinois.edu:5000
+      http://sp26-cs525-0704.cs.illinois.edu:5000
+      http://sp26-cs525-0705.cs.illinois.edu:5000
+      http://sp26-cs525-0706.cs.illinois.edu:5000
+      http://sp26-cs525-0707.cs.illinois.edu:5000
+      http://sp26-cs525-0708.cs.illinois.edu:5000
+      http://sp26-cs525-0710.cs.illinois.edu:5000
+      http://sp26-cs525-0711.cs.illinois.edu:5000
+      http://sp26-cs525-0712.cs.illinois.edu:5000
+      http://sp26-cs525-0713.cs.illinois.edu:5000
+      http://sp26-cs525-0714.cs.illinois.edu:5000
+      http://sp26-cs525-0715.cs.illinois.edu:5000
+      http://sp26-cs525-0716.cs.illinois.edu:5000
+      http://sp26-cs525-0717.cs.illinois.edu:5000
+      http://sp26-cs525-0718.cs.illinois.edu:5000
+      http://sp26-cs525-0719.cs.illinois.edu:5000
+      http://sp26-cs525-0720.cs.illinois.edu:5000
+    mode:     burst
+    rps:      2.0
+    duration: 120s
+    routing:  cost
+    strategy: random
+
+[burst] 2.0 rps for 120s across 19 nodes — 20-request bursts
+  OK → crop_yield_pred_north             942ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             924ms  sent=sp26-cs525-0716  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             836ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             970ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             861ms  sent=sp26-cs525-0717  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             868ms  sent=sp26-cs525-0713  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             843ms  sent=sp26-cs525-0717  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             911ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             859ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_yield_pred_north             836ms  sent=sp26-cs525-0718  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             841ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             830ms  sent=sp26-cs525-0716  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             881ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_yield_pred_north             991ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → crop_yield_pred_north             886ms  sent=sp26-cs525-0711  served=sp26-cs525-0719
+  OK → crop_yield_pred_north             897ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             850ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_yield_pred_north             899ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             833ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  [burst] switching to adapter: crop_corn_disease
+  OK → crop_yield_pred_north             915ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → crop_corn_disease                 872ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_corn_disease                 897ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → crop_corn_disease                 872ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → crop_corn_disease                 894ms  sent=sp26-cs525-0706  served=sp26-cs525-0705
+  OK → crop_corn_disease                 845ms  sent=sp26-cs525-0717  served=sp26-cs525-0719
+  OK → crop_corn_disease                 905ms  sent=sp26-cs525-0719  served=sp26-cs525-0719
+  OK → crop_corn_disease                 915ms  sent=sp26-cs525-0720  served=sp26-cs525-0719
+  OK → crop_corn_disease                 933ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → crop_corn_disease                 894ms  sent=sp26-cs525-0716  served=sp26-cs525-0719
+  OK → crop_corn_disease                 847ms  sent=sp26-cs525-0712  served=sp26-cs525-0719
+  OK → crop_corn_disease                 961ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_corn_disease                 888ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → crop_corn_disease                 877ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 880ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → crop_corn_disease                 937ms  sent=sp26-cs525-0714  served=sp26-cs525-0719
+  OK → crop_corn_disease                 900ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 828ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → crop_corn_disease                 916ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 840ms  sent=sp26-cs525-0716  served=sp26-cs525-0719
+  [burst] switching to adapter: equip_gps_guidance
+  OK → crop_corn_disease                 857ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → equip_gps_guidance                963ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → equip_gps_guidance                822ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_gps_guidance                983ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → equip_gps_guidance                995ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_gps_guidance               1007ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → equip_gps_guidance                890ms  sent=sp26-cs525-0713  served=sp26-cs525-0715
+  OK → equip_gps_guidance                867ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → equip_gps_guidance                904ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → equip_gps_guidance                908ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → equip_gps_guidance                857ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → equip_gps_guidance                911ms  sent=sp26-cs525-0708  served=sp26-cs525-0705
+  OK → equip_gps_guidance                882ms  sent=sp26-cs525-0714  served=sp26-cs525-0715
+  OK → equip_gps_guidance                889ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → equip_gps_guidance                986ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → equip_gps_guidance                912ms  sent=sp26-cs525-0720  served=sp26-cs525-0715
+  OK → equip_gps_guidance               1007ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → equip_gps_guidance                935ms  sent=sp26-cs525-0718  served=sp26-cs525-0715
+  OK → equip_gps_guidance                870ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → equip_gps_guidance                954ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  [burst] switching to adapter: pest_bee_health
+  OK → equip_gps_guidance                860ms  sent=sp26-cs525-0718  served=sp26-cs525-0715
+  OK → pest_bee_health                   976ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_bee_health                   851ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_bee_health                   909ms  sent=sp26-cs525-0714  served=sp26-cs525-0716
+  OK → pest_bee_health                   887ms  sent=sp26-cs525-0717  served=sp26-cs525-0716
+  OK → pest_bee_health                   921ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_bee_health                   898ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_bee_health                   874ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → pest_bee_health                   954ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → pest_bee_health                   834ms  sent=sp26-cs525-0720  served=sp26-cs525-0716
+  OK → pest_bee_health                   881ms  sent=sp26-cs525-0719  served=sp26-cs525-0716
+  OK → pest_bee_health                   884ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → pest_bee_health                   909ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_bee_health                   906ms  sent=sp26-cs525-0719  served=sp26-cs525-0716
+  OK → pest_bee_health                   918ms  sent=sp26-cs525-0715  served=sp26-cs525-0716
+  OK → pest_bee_health                   888ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_bee_health                   934ms  sent=sp26-cs525-0715  served=sp26-cs525-0716
+  OK → pest_bee_health                   947ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → pest_bee_health                   860ms  sent=sp26-cs525-0716  served=sp26-cs525-0716
+  OK → pest_bee_health                   905ms  sent=sp26-cs525-0713  served=sp26-cs525-0716
+  [burst] switching to adapter: pest_bee_health
+  OK → pest_bee_health                   979ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → pest_bee_health                   886ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → pest_bee_health                   869ms  sent=sp26-cs525-0718  served=sp26-cs525-0716
+  OK → pest_bee_health                   911ms  sent=sp26-cs525-0714  served=sp26-cs525-0716
+  OK → pest_bee_health                   921ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → pest_bee_health                   848ms  sent=sp26-cs525-0714  served=sp26-cs525-0716
+  OK → pest_bee_health                   865ms  sent=sp26-cs525-0713  served=sp26-cs525-0716
+  OK → pest_bee_health                   853ms  sent=sp26-cs525-0719  served=sp26-cs525-0716
+  OK → pest_bee_health                   903ms  sent=sp26-cs525-0712  served=sp26-cs525-0716
+  OK → pest_bee_health                   866ms  sent=sp26-cs525-0720  served=sp26-cs525-0716
+  OK → pest_bee_health                   879ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → pest_bee_health                   885ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_bee_health                   913ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → pest_bee_health                   850ms  sent=sp26-cs525-0719  served=sp26-cs525-0716
+  OK → pest_bee_health                   909ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → pest_bee_health                   883ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → pest_bee_health                   847ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_bee_health                   965ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → pest_bee_health                   838ms  sent=sp26-cs525-0714  served=sp26-cs525-0716
+  OK → pest_bee_health                   884ms  sent=sp26-cs525-0712  served=sp26-cs525-0716
+  [burst] switching to adapter: crop_potato_disease
+  OK → pest_bee_health                   856ms  sent=sp26-cs525-0711  served=sp26-cs525-0716
+  OK → crop_potato_disease               906ms  sent=sp26-cs525-0713  served=sp26-cs525-0713
+  OK → crop_potato_disease               868ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_potato_disease               929ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_potato_disease               944ms  sent=sp26-cs525-0719  served=sp26-cs525-0713
+  OK → crop_potato_disease               889ms  sent=sp26-cs525-0716  served=sp26-cs525-0713
+  OK → crop_potato_disease               963ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → crop_potato_disease               888ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → crop_potato_disease               886ms  sent=sp26-cs525-0720  served=sp26-cs525-0713
+  OK → crop_potato_disease               924ms  sent=sp26-cs525-0718  served=sp26-cs525-0713
+  OK → crop_potato_disease               869ms  sent=sp26-cs525-0711  served=sp26-cs525-0713
+  OK → crop_potato_disease               914ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → crop_potato_disease              1046ms  sent=sp26-cs525-0716  served=sp26-cs525-0713
+  OK → crop_potato_disease               938ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_potato_disease               948ms  sent=sp26-cs525-0720  served=sp26-cs525-0713
+  OK → crop_potato_disease               959ms  sent=sp26-cs525-0717  served=sp26-cs525-0713
+  OK → crop_potato_disease               906ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → crop_potato_disease               879ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_potato_disease               851ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → crop_potato_disease               904ms  sent=sp26-cs525-0712  served=sp26-cs525-0713
+  [burst] switching to adapter: soil_n_source
+  OK → crop_potato_disease               844ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → soil_n_source                     925ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → soil_n_source                     826ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → soil_n_source                     846ms  sent=sp26-cs525-0712  served=sp26-cs525-0715
+  OK → soil_n_source                     911ms  sent=sp26-cs525-0718  served=sp26-cs525-0715
+  OK → soil_n_source                     888ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → soil_n_source                     824ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → soil_n_source                     924ms  sent=sp26-cs525-0720  served=sp26-cs525-0715
+  OK → soil_n_source                     867ms  sent=sp26-cs525-0712  served=sp26-cs525-0715
+  OK → soil_n_source                     910ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → soil_n_source                     920ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → soil_n_source                     934ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → soil_n_source                     824ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → soil_n_source                     868ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → soil_n_source                     901ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → soil_n_source                     844ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → soil_n_source                     924ms  sent=sp26-cs525-0716  served=sp26-cs525-0715
+  OK → soil_n_source                     912ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → soil_n_source                     846ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → soil_n_source                     920ms  sent=sp26-cs525-0720  served=sp26-cs525-0715
+  [burst] switching to adapter: irrigation_sched_block1
+  OK → soil_n_source                     931ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → irrigation_sched_block1           838ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → irrigation_sched_block1           873ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           859ms  sent=sp26-cs525-0718  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           973ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_sched_block1           924ms  sent=sp26-cs525-0712  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           831ms  sent=sp26-cs525-0717  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           835ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → irrigation_sched_block1           913ms  sent=sp26-cs525-0719  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           927ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → irrigation_sched_block1           857ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_sched_block1           845ms  sent=sp26-cs525-0707  served=sp26-cs525-0708
+  OK → irrigation_sched_block1           830ms  sent=sp26-cs525-0717  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           869ms  sent=sp26-cs525-0718  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           852ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → irrigation_sched_block1           992ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → irrigation_sched_block1          1001ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → irrigation_sched_block1           911ms  sent=sp26-cs525-0706  served=sp26-cs525-0708
+  OK → irrigation_sched_block1           884ms  sent=sp26-cs525-0720  served=sp26-cs525-0711
+  OK → irrigation_sched_block1           933ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  [burst] switching to adapter: crop_apple_disease
+  OK → irrigation_sched_block1           917ms  sent=sp26-cs525-0711  served=sp26-cs525-0711
+  OK → crop_apple_disease                871ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_apple_disease                881ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → crop_apple_disease                874ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_apple_disease                906ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → crop_apple_disease                843ms  sent=sp26-cs525-0718  served=sp26-cs525-0717
+  OK → crop_apple_disease                994ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → crop_apple_disease                916ms  sent=sp26-cs525-0716  served=sp26-cs525-0717
+  OK → crop_apple_disease                876ms  sent=sp26-cs525-0715  served=sp26-cs525-0717
+  OK → crop_apple_disease                910ms  sent=sp26-cs525-0714  served=sp26-cs525-0717
+  OK → crop_apple_disease                832ms  sent=sp26-cs525-0712  served=sp26-cs525-0717
+  OK → crop_apple_disease                964ms  sent=sp26-cs525-0713  served=sp26-cs525-0717
+  OK → crop_apple_disease                837ms  sent=sp26-cs525-0717  served=sp26-cs525-0717
+  OK → crop_apple_disease                905ms  sent=sp26-cs525-0711  served=sp26-cs525-0717
+  OK → crop_apple_disease                891ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → crop_apple_disease                891ms  sent=sp26-cs525-0719  served=sp26-cs525-0717
+  OK → crop_apple_disease                914ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  OK → crop_apple_disease                926ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_apple_disease                822ms  sent=sp26-cs525-0708  served=sp26-cs525-0708
+  OK → crop_apple_disease                836ms  sent=sp26-cs525-0705  served=sp26-cs525-0708
+  [burst] switching to adapter: equip_tractor
+  OK → crop_apple_disease                893ms  sent=sp26-cs525-0713  served=sp26-cs525-0717
+  OK → equip_tractor                     854ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → equip_tractor                     924ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → equip_tractor                     902ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  OK → equip_tractor                     899ms  sent=sp26-cs525-0719  served=sp26-cs525-0715
+  OK → equip_tractor                     860ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → equip_tractor                     910ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → equip_tractor                     933ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → equip_tractor                     842ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → equip_tractor                     822ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → equip_tractor                     970ms  sent=sp26-cs525-0720  served=sp26-cs525-0715
+  OK → equip_tractor                     929ms  sent=sp26-cs525-0720  served=sp26-cs525-0715
+  OK → equip_tractor                     875ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → equip_tractor                     899ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → equip_tractor                     937ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → equip_tractor                     857ms  sent=sp26-cs525-0710  served=sp26-cs525-0710
+  OK → equip_tractor                     840ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → equip_tractor                     940ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → equip_tractor                     895ms  sent=sp26-cs525-0717  served=sp26-cs525-0715
+  OK → equip_tractor                     963ms  sent=sp26-cs525-0715  served=sp26-cs525-0715
+  [burst] switching to adapter: equip_sensor
+  OK → equip_tractor                     872ms  sent=sp26-cs525-0719  served=sp26-cs525-0715
+  OK → equip_sensor                      882ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → equip_sensor                      882ms  sent=sp26-cs525-0720  served=sp26-cs525-0720
+  OK → equip_sensor                      934ms  sent=sp26-cs525-0718  served=sp26-cs525-0720
+  OK → equip_sensor                      916ms  sent=sp26-cs525-0716  served=sp26-cs525-0720
+  OK → equip_sensor                      850ms  sent=sp26-cs525-0712  served=sp26-cs525-0720
+  OK → equip_sensor                      851ms  sent=sp26-cs525-0715  served=sp26-cs525-0720
+  OK → equip_sensor                      947ms  sent=sp26-cs525-0718  served=sp26-cs525-0720
+  OK → equip_sensor                      914ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_sensor                      916ms  sent=sp26-cs525-0715  served=sp26-cs525-0720
+  OK → equip_sensor                      911ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → equip_sensor                      925ms  sent=sp26-cs525-0714  served=sp26-cs525-0720
+  OK → equip_sensor                      851ms  sent=sp26-cs525-0705  served=sp26-cs525-0705
+  OK → equip_sensor                      908ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → equip_sensor                      931ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → equip_sensor                      932ms  sent=sp26-cs525-0711  served=sp26-cs525-0720
+  OK → equip_sensor                      943ms  sent=sp26-cs525-0707  served=sp26-cs525-0705
+  OK → equip_sensor                      893ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → equip_sensor                      822ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → equip_sensor                      872ms  sent=sp26-cs525-0718  served=sp26-cs525-0720
+  [burst] switching to adapter: crop_potato_disease
+  OK → equip_sensor                      882ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_potato_disease               870ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_potato_disease               839ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → crop_potato_disease               917ms  sent=sp26-cs525-0712  served=sp26-cs525-0713
+  OK → crop_potato_disease               854ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → crop_potato_disease               897ms  sent=sp26-cs525-0705  served=sp26-cs525-0706
+  OK → crop_potato_disease               838ms  sent=sp26-cs525-0706  served=sp26-cs525-0706
+  OK → crop_potato_disease               843ms  sent=sp26-cs525-0714  served=sp26-cs525-0713
+  OK → crop_potato_disease               834ms  sent=sp26-cs525-0719  served=sp26-cs525-0713
+  OK → crop_potato_disease               908ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_potato_disease               914ms  sent=sp26-cs525-0717  served=sp26-cs525-0713
+  OK → crop_potato_disease               908ms  sent=sp26-cs525-0707  served=sp26-cs525-0706
+  OK → crop_potato_disease              1009ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_potato_disease               832ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_potato_disease               936ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_potato_disease               962ms  sent=sp26-cs525-0716  served=sp26-cs525-0713
+  OK → crop_potato_disease               831ms  sent=sp26-cs525-0715  served=sp26-cs525-0713
+  OK → crop_potato_disease               868ms  sent=sp26-cs525-0715  served=sp26-cs525-0713
+  OK → crop_potato_disease               862ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_potato_disease               994ms  sent=sp26-cs525-0708  served=sp26-cs525-0706
+  OK → crop_potato_disease               840ms  sent=sp26-cs525-0713  served=sp26-cs525-0713
+
+============================================================
+Results: mode=burst routing=cost nodes=19
+============================================================
+  Total requests:  240
+  Successful:      240
+  Failed:          0
+  Forwarded:       240 (100.0%)
+  Latency p50:     893ms
+  Latency p95:     979ms
+  Latency p99:     1007ms
+  Latency mean:    895ms
+
+  Per-adapter mean latency (top 10 by request count):
+    pest_bee_health                     n=  40  p50=   886ms  [DISK]
+    crop_potato_disease                 n=  40  p50=   900ms  [DISK]
+    crop_yield_pred_north               n=  20  p50=   875ms  [DISK]
+    crop_corn_disease                   n=  20  p50=   891ms  [GPU]
+    equip_gps_guidance                  n=  20  p50=   910ms  [DISK]
+    soil_n_source                       n=  20  p50=   905ms  [DISK]
+    irrigation_sched_block1             n=  20  p50=   878ms  [DISK]
+    crop_apple_disease                  n=  20  p50=   891ms  [DISK]
+    equip_tractor                       n=  20  p50=   899ms  [DISK]
+    equip_sensor                        n=  20  p50=   909ms  [DISK]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 12 (5.0%)
+    sp26-cs525-0702: 11 (4.6%)
+    sp26-cs525-0703: 15 (6.2%)
+    sp26-cs525-0704: 7 (2.9%)
+    sp26-cs525-0705: 20 (8.3%)
+    sp26-cs525-0706: 12 (5.0%)
+    sp26-cs525-0707: 13 (5.4%)
+    sp26-cs525-0708: 17 (7.1%)
+    sp26-cs525-0710: 12 (5.0%)
+    sp26-cs525-0711: 7 (2.9%)
+    sp26-cs525-0712: 10 (4.2%)
+    sp26-cs525-0713: 8 (3.3%)
+    sp26-cs525-0714: 9 (3.8%)
+    sp26-cs525-0715: 14 (5.8%)
+    sp26-cs525-0716: 18 (7.5%)
+    sp26-cs525-0717: 18 (7.5%)
+    sp26-cs525-0718: 12 (5.0%)
+    sp26-cs525-0719: 13 (5.4%)
+    sp26-cs525-0720: 12 (5.0%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 7 (2.9%)
+    sp26-cs525-0702.cs.illinois.edu: 7 (2.9%)
+    sp26-cs525-0703.cs.illinois.edu: 25 (10.4%)
+    sp26-cs525-0704.cs.illinois.edu: 6 (2.5%)
+    sp26-cs525-0705.cs.illinois.edu: 20 (8.3%)
+    sp26-cs525-0706.cs.illinois.edu: 32 (13.3%)
+    sp26-cs525-0708.cs.illinois.edu: 10 (4.2%)
+    sp26-cs525-0710.cs.illinois.edu: 12 (5.0%)
+    sp26-cs525-0711.cs.illinois.edu: 9 (3.8%)
+    sp26-cs525-0713.cs.illinois.edu: 18 (7.5%)
+    sp26-cs525-0715.cs.illinois.edu: 34 (14.2%)
+    sp26-cs525-0716.cs.illinois.edu: 22 (9.2%)
+    sp26-cs525-0717.cs.illinois.edu: 12 (5.0%)
+    sp26-cs525-0719.cs.illinois.edu: 16 (6.7%)
+    sp26-cs525-0720.cs.illinois.edu: 10 (4.2%)
+
+Results saved to /Users/npunati/Downloads/memLoRA-edge/results_no_bloom/nodes_19/burst/results.jsonl
