@@ -1,0 +1,292 @@
+==> Distributed workload generator
+    nodes:    4
+      http://sp26-cs525-0701.cs.illinois.edu:5000
+      http://sp26-cs525-0702.cs.illinois.edu:5000
+      http://sp26-cs525-0703.cs.illinois.edu:5000
+      http://sp26-cs525-0704.cs.illinois.edu:5000
+    mode:     zipf
+    rps:      2.0
+    duration: 120s
+    routing:  cost
+    strategy: random
+
+[zipf] 2.0 rps for 120s across 4 nodes — Zipf s=1.5
+  Top 5 weights: ['crop_corn_disease=0.414', 'crop_wheat_disease=0.147', 'crop_soy_disease=0.080', 'crop_tomato_disease=0.052', 'crop_cotton_disease=0.037']
+  OK → crop_corn_disease                 862ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 876ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_grape_disease                913ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_wheat_disease                925ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_alfalfa_health               883ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 947ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 958ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_tomato_disease               868ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_wheat_disease                885ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_potato_disease               890ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 888ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 834ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_cotton_disease              1004ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_wheat_disease                863ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 945ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_tomato_disease               973ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_corn_disease                 906ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_growth_stage                 852ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 839ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_general_health               859ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_wheat_disease                909ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → soil_nitrogen                     922ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_peach_disease                866ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 916ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_potato_disease               955ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_soy_disease                  867ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_wheat_disease                886ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → pest_rootworm                     866ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_cotton_disease               830ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → pest_general                      837ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 850ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_general_health               930ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_soy_disease                  943ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_corn_disease                 851ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 887ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_cotton_disease               975ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 875ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 834ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 830ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_barley_disease               827ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 929ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_wheat_disease                838ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 849ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_barley_disease               874ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_tomato_disease              1012ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_soy_disease                  882ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 898ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → irrigation_zone_c                 910ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 831ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 928ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → pest_grasshopper                  937ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_general_health               950ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 842ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 910ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_cotton_disease               846ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → crop_tomato_disease               910ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 811ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → pest_aphid                        876ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 908ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_general_health               895ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_wheat_disease                951ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 958ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 840ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                877ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_general_health               889ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_corn_disease                 900ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_soy_disease                  912ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_cotton_disease               922ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → crop_ndvi_zones                   881ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_wheat_disease                860ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                922ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                903ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_grape_disease                977ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_corn_disease                 888ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_yield_pred_south             850ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 824ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_soy_disease                  920ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_tomato_disease               896ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_rice_disease                 894ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_soy_disease                  953ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_general_health               964ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_general_health               859ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 985ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_wheat_disease                853ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                1008ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → pest_caterpillar                  864ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 922ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_cotton_disease               849ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → soil_phosphorus                   882ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                959ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_cotton_disease               868ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → crop_corn_disease                 981ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 883ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 920ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 910ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 928ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_wheat_disease                872ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_wheat_disease                827ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 956ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 865ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → irrigation_zone_d                 890ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_cotton_disease               991ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → crop_corn_disease                 899ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                911ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_wheat_disease                921ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 933ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_grape_disease                943ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_wheat_disease                956ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 865ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 816ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 989ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 837ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_rice_disease                 909ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → pest_weevil                       884ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_cotton_disease               858ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 886ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_alfalfa_health               952ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → crop_tomato_disease               902ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_wheat_disease                904ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 843ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_rice_disease                 906ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             905ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_berry_disease                916ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 926ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_peach_disease                889ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_stress_heat                  859ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 840ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_soy_disease                  907ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_barley_disease               912ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 892ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 859ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 912ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 920ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                1022ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_soy_disease                  847ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 959ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_growth_stage                 868ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 878ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_apple_disease               1402ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_wheat_disease                902ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_tomato_disease               915ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_corn_disease                 921ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_wheat_disease                829ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 944ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                924ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 864ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 851ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 832ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 918ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_peach_disease                909ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 921ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_wheat_disease                854ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_potato_disease               841ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → pest_beneficial_count             894ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_alfalfa_health               905ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 915ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 927ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_wheat_disease                855ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 969ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_peach_disease                856ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → equip_yield_monitor               972ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_wheat_disease                900ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → pest_general                     1302ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 909ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 917ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease               1016ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 938ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_wheat_disease                949ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_berry_disease                880ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 972ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_general_health               984ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 994ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 850ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_berry_disease                881ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_tomato_disease               926ms  sent=sp26-cs525-0704  served=sp26-cs525-0702
+  OK → crop_corn_disease                 937ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_soy_disease                  903ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 891ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_tomato_disease               878ms  sent=sp26-cs525-0703  served=sp26-cs525-0702
+  OK → crop_corn_disease                 983ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → weather_wind_alert                916ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 884ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_yield_pred_north             914ms  sent=sp26-cs525-0703  served=sp26-cs525-0701
+  OK → crop_corn_disease                 924ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 935ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 865ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_general_health               903ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             873ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → crop_grape_disease                979ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → pest_general                      890ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_rice_disease                 900ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 907ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_oat_disease                  842ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_wheat_disease                934ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_soy_disease                  865ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_tomato_disease               812ms  sent=sp26-cs525-0702  served=sp26-cs525-0702
+  OK → crop_apple_disease                839ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 878ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 881ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → irrigation_sched_block2          1486ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_yield_pred_north             865ms  sent=sp26-cs525-0704  served=sp26-cs525-0701
+  OK → crop_wheat_disease                924ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_citrus_disease              1389ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_citrus_disease               891ms  sent=sp26-cs525-0702  served=sp26-cs525-0703
+  OK → crop_corn_disease                 957ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_corn_disease                 958ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 977ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_potato_disease               898ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_cotton_disease               875ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 910ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_barley_disease               910ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_barley_disease               834ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 851ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 868ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_pasture_health              1190ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_corn_disease                 887ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_wheat_disease                885ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_stress_drought               852ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 857ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → pest_leafhopper                  1472ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_corn_disease                 917ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 893ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_corn_disease                 895ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 849ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → irrigation_zone_a                1119ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_pasture_health               890ms  sent=sp26-cs525-0701  served=sp26-cs525-0703
+  OK → crop_corn_disease                 917ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_cotton_disease               866ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_wheat_disease                891ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → soil_erosion_risk                 866ms  sent=sp26-cs525-0701  served=sp26-cs525-0701
+  OK → crop_corn_disease                 909ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_soy_disease                  930ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+  OK → crop_wheat_disease                974ms  sent=sp26-cs525-0701  served=sp26-cs525-0704
+  OK → crop_potato_disease               834ms  sent=sp26-cs525-0702  served=sp26-cs525-0704
+  OK → crop_corn_disease                 883ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_corn_disease                 939ms  sent=sp26-cs525-0704  served=sp26-cs525-0704
+  OK → crop_soy_disease                  850ms  sent=sp26-cs525-0704  served=sp26-cs525-0703
+  OK → crop_potato_disease               917ms  sent=sp26-cs525-0703  served=sp26-cs525-0704
+  OK → crop_cotton_disease               926ms  sent=sp26-cs525-0702  served=sp26-cs525-0701
+  OK → crop_soy_disease                  911ms  sent=sp26-cs525-0703  served=sp26-cs525-0703
+
+============================================================
+Results: mode=zipf routing=cost nodes=4
+============================================================
+  Total requests:  240
+  Successful:      240
+  Failed:          0
+  Forwarded:       240 (100.0%)
+  Latency p50:     900ms
+  Latency p95:     995ms
+  Latency p99:     1397ms
+  Latency mean:    912ms
+
+  Per-adapter mean latency (top 10 by request count):
+    crop_corn_disease                   n=  99  p50=   906ms  [GPU]
+    crop_wheat_disease                  n=  32  p50=   903ms  [GPU]
+    crop_soy_disease                    n=  13  p50=   907ms  [GPU]
+    crop_cotton_disease                 n=  12  p50=   871ms  [CPU]
+    crop_tomato_disease                 n=  10  p50=   906ms  [CPU]
+    crop_general_health                 n=   9  p50=   903ms  [CPU]
+    crop_potato_disease                 n=   6  p50=   894ms  [DISK]
+    crop_barley_disease                 n=   5  p50=   874ms  [CPU]
+    crop_grape_disease                  n=   4  p50=   960ms  [DISK]
+    crop_peach_disease                  n=   4  p50=   877ms  [DISK]
+
+  Requests sent to each node:
+    sp26-cs525-0701: 62 (25.8%)
+    sp26-cs525-0702: 52 (21.7%)
+    sp26-cs525-0703: 67 (27.9%)
+    sp26-cs525-0704: 59 (24.6%)
+
+  Requests served by each node:
+    sp26-cs525-0701.cs.illinois.edu: 25 (10.4%)
+    sp26-cs525-0702.cs.illinois.edu: 17 (7.1%)
+    sp26-cs525-0703.cs.illinois.edu: 50 (20.8%)
+    sp26-cs525-0704.cs.illinois.edu: 148 (61.7%)
+
+Results saved to /Users/npunati/Downloads/memLoRA-edge/results_no_bloom/nodes_4/zipf/results.jsonl
