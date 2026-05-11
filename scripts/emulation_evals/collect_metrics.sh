@@ -14,7 +14,6 @@ ALL_HOSTS=(
     sp26-cs525-0706.cs.illinois.edu
     sp26-cs525-0707.cs.illinois.edu
     sp26-cs525-0708.cs.illinois.edu
-    sp26-cs525-0709.cs.illinois.edu
     sp26-cs525-0710.cs.illinois.edu
     sp26-cs525-0711.cs.illinois.edu
     sp26-cs525-0712.cs.illinois.edu
