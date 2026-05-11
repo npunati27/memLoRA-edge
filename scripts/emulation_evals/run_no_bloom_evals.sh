@@ -15,7 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Fixed for this sweep ──────────────────────────────────────────────────────
-BRANCH="no_bloom"
+BRANCH="old-main"
 BASE_RESULTS_DIR="results_no_bloom"
 ROUTING_MODE="cost"
 
