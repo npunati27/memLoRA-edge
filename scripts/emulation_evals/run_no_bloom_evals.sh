@@ -62,7 +62,7 @@ EOF
 done
 
 # ── Sweep dimensions ──────────────────────────────────────────────────────────
-NODE_SIZES=(4 8 13 17)
+NODE_SIZES=(19)
 WORKLOADS=(zipf uniform burst)
 
 TOTAL=$(( ${#NODE_SIZES[@]} * ${#WORKLOADS[@]} ))

@@ -113,10 +113,31 @@ LOCAL_RESULTS_DIR="$REPO_ROOT/$RESULTS_DIR"
 RESULTS_JSONL="$LOCAL_RESULTS_DIR/results.jsonl"
 SUMMARY_FILE="$LOCAL_RESULTS_DIR/summary.txt"
 
-# Build node URL list for the workload script from the node count + port
+# Build node URL list — must match the ALL_HOSTS slice in run_mock_cluster.sh
+ALL_HOSTS=(
+    sp26-cs525-0701.cs.illinois.edu
+    sp26-cs525-0702.cs.illinois.edu
+    sp26-cs525-0703.cs.illinois.edu
+    sp26-cs525-0704.cs.illinois.edu
+    sp26-cs525-0705.cs.illinois.edu
+    sp26-cs525-0706.cs.illinois.edu
+    sp26-cs525-0707.cs.illinois.edu
+    sp26-cs525-0708.cs.illinois.edu
+    sp26-cs525-0710.cs.illinois.edu
+    sp26-cs525-0711.cs.illinois.edu
+    sp26-cs525-0712.cs.illinois.edu
+    sp26-cs525-0713.cs.illinois.edu
+    sp26-cs525-0714.cs.illinois.edu
+    sp26-cs525-0715.cs.illinois.edu
+    sp26-cs525-0716.cs.illinois.edu
+    sp26-cs525-0717.cs.illinois.edu
+    sp26-cs525-0718.cs.illinois.edu
+    sp26-cs525-0719.cs.illinois.edu
+    sp26-cs525-0720.cs.illinois.edu
+)
 WORKLOAD_NODES=()
-for i in $(seq 1 "$NUM_NODES"); do
-    WORKLOAD_NODES+=("http://sp26-cs525-07$(printf '%02d' "$i").cs.illinois.edu:$SERVE_PORT")
+for host in "${ALL_HOSTS[@]:0:$NUM_NODES}"; do
+    WORKLOAD_NODES+=("http://$host:$SERVE_PORT")
 done
 
 mkdir -p "$LOCAL_RESULTS_DIR"
