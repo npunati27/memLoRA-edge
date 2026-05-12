@@ -366,6 +366,10 @@ def main():
         adapter_load_ms = payload.get("adapter_load_ms", 0.0)
         served_by = payload.get("served_by", "unknown")
         tier_before = payload.get("tier_before")
+        served_from_disk_tier = payload.get("served_from_disk_tier")
+        adapter_load_source = payload.get(
+            "adapter_load_source", payload.get("adapter_source", adapter_source)
+        )
         source_counts[adapter_source] += 1
 
         snapshot_summary = None
@@ -387,6 +391,8 @@ def main():
             "adapter_load_ms": round(float(adapter_load_ms), 3),
             "served_by": served_by,
             "tier_before": tier_before,
+            "served_from_disk_tier": served_from_disk_tier,
+            "adapter_load_source": adapter_load_source,
             "ts_unix": time.time(),
             "response_error": payload.get("error", ""),
         }

@@ -163,7 +163,13 @@ class InferenceMixin:
                 "adapter_name": adapter_name,
                 "tier_before":  tier_before,
                 "adapter_source": adapter_source,
+                "adapter_load_source": (
+                    adapter_source if adapter_name is not None else None
+                ),
                 "adapter_load_ms": adapter_load_ms,
+                "served_from_disk_tier": (
+                    tier_before == "disk" if adapter_name else None
+                ),
             })
         except Exception as e:
             logger.error(
@@ -181,7 +187,13 @@ class InferenceMixin:
                 adapter=adapter_name,
                 latency_ms=inf_time_ms,
                 tokens=tokens_generated,
-                tier_before=tier_before, 
+                tier_before=tier_before,
+                adapter_load_source=(
+                    adapter_source if adapter_name is not None else None
+                ),
+                served_from_disk_tier=(
+                    tier_before == "disk" if adapter_name is not None else None
+                ),
             )
             self._ongoing -= 1
 

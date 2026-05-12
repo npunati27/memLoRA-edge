@@ -51,9 +51,14 @@ class MockInferenceMixin:
                 )
 
         tier_before = None
+        adapter_load_source = None
         changes: list[tuple[str, str, str]] = []
         if adapter_name is not None:
             tier_before = self._get_local_tier(adapter_name)
+            if ms.MOCK_SKIP_ADAPTER_PATH_CHECK:
+                adapter_load_source = None
+            else:
+                adapter_load_source = "local"
             changes = self._track_local_adapter(adapter_name)
             for adapter, old_tier, new_tier in changes:
                 asyncio.create_task(self._broadcast_state_change(adapter, old_tier, new_tier))
@@ -115,6 +120,15 @@ class MockInferenceMixin:
                 "served_by": self.my_ip,
                 "adapter_name": adapter_name,
                 "tier_before": tier_before,
+                "adapter_source": (
+                    adapter_load_source
+                    if adapter_load_source is not None
+                    else ("mock_skip_path_check" if adapter_name else None)
+                ),
+                "adapter_load_source": adapter_load_source,
+                "served_from_disk_tier": (
+                    tier_before == "disk" if adapter_name else None
+                ),
                 "mock": True,
                 "mock_tier_delay_ms": tier_delay_ms,
                 "mock_tier_details": tier_details,
@@ -137,6 +151,10 @@ class MockInferenceMixin:
                 latency_ms=inf_time_ms,
                 tokens=tokens_generated,
                 tier_before=tier_before,
+                adapter_load_source=adapter_load_source,
+                served_from_disk_tier=(
+                    tier_before == "disk" if adapter_name is not None else None
+                ),
                 mock=True,
             )
             self._ongoing -= 1
