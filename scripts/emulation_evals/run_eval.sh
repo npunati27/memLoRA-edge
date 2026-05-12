@@ -239,7 +239,8 @@ echo ""
 # ── Step 5: Clear cluster logs ────────────────────────────────────────────────
 echo "==> [5/5] Clearing cluster logs..."
 SSH_USER="$SSH_USER" \
-    bash "$SCRIPT_DIR/clear_cluster_logs.sh"
+    bash "$SCRIPT_DIR/clear_cluster_logs.sh" \
+        --nodes "$NUM_NODES"
 echo ""
 
 # ── Done ──────────────────────────────────────────────────────────────────────
