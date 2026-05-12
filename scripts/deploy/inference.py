@@ -15,6 +15,8 @@ from .config import (
     USE_S3_ADAPTERS,
 )
 from .s3_adapter import download_adapter_from_s3
+from .lru import served_from_disk_tier_flag
+
 
 class InferenceMixin:
     """Local inference execution and request forwarding."""
@@ -105,9 +107,14 @@ class InferenceMixin:
                 lora_local_path=lora_path,
             )
 
+        lru_changes: list[tuple[str, str, str]] = []
+        served_from_disk_tier_val: bool | None = None
         if adapter_name is not None:
-            changes = self._track_local_adapter(adapter_name)
-            for adapter, old_tier, new_tier in changes:
+            lru_changes = self._track_local_adapter(adapter_name)
+            served_from_disk_tier_val = served_from_disk_tier_flag(
+                adapter_name, tier_before, lru_changes
+            )
+            for adapter, old_tier, new_tier in lru_changes:
                 asyncio.create_task(
                     self._broadcast_state_change(adapter, old_tier, new_tier)
                 )
@@ -167,9 +174,7 @@ class InferenceMixin:
                     adapter_source if adapter_name is not None else None
                 ),
                 "adapter_load_ms": adapter_load_ms,
-                "served_from_disk_tier": (
-                    tier_before == "disk" if adapter_name else None
-                ),
+                "served_from_disk_tier": served_from_disk_tier_val,
             })
         except Exception as e:
             logger.error(
@@ -191,9 +196,7 @@ class InferenceMixin:
                 adapter_load_source=(
                     adapter_source if adapter_name is not None else None
                 ),
-                served_from_disk_tier=(
-                    tier_before == "disk" if adapter_name is not None else None
-                ),
+                served_from_disk_tier=served_from_disk_tier_val,
             )
             self._ongoing -= 1
 

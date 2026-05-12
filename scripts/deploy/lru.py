@@ -4,6 +4,25 @@ import os
 from .config import ADAPTER_PATH, MAX_GPU_LORA, MAX_CPU_LORA, USE_S3_ADAPTERS
 
 
+def served_from_disk_tier_flag(
+    adapter_name: str | None,
+    tier_before: str | None,
+    lru_changes: list[tuple[str, str, str]],
+) -> bool | None:
+    """True when local weights were disk-resident before GPU attach for this request.
+
+    ``tier_before`` is sampled at request entry (often ``s3`` on cold S3 paths); LRU
+    may still record ``disk->gpu`` after download, so we also check ``lru_changes``.
+    """
+    if adapter_name is None:
+        return None
+    if tier_before == "disk":
+        return True
+    return any(
+        a == adapter_name and old_t == "disk" for a, old_t, _ in lru_changes
+    )
+
+
 class LRUMixin:
     """Tracks local GPU/CPU adapter residency using LRU eviction."""
 

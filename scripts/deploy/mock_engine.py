@@ -20,6 +20,7 @@ from .probe import ProbeMixin
 from .parsing import ParsingMixin
 from . import mock_settings as ms
 from .mock_tier_latency import compute_mock_tier_delays
+from .lru import served_from_disk_tier_flag
 
 
 class MockInferenceMixin:
@@ -53,6 +54,7 @@ class MockInferenceMixin:
         tier_before = None
         adapter_load_source = None
         changes: list[tuple[str, str, str]] = []
+        served_from_disk_tier_val: bool | None = None
         if adapter_name is not None:
             tier_before = self._get_local_tier(adapter_name)
             if ms.MOCK_SKIP_ADAPTER_PATH_CHECK:
@@ -60,6 +62,9 @@ class MockInferenceMixin:
             else:
                 adapter_load_source = "local"
             changes = self._track_local_adapter(adapter_name)
+            served_from_disk_tier_val = served_from_disk_tier_flag(
+                adapter_name, tier_before, changes
+            )
             for adapter, old_tier, new_tier in changes:
                 asyncio.create_task(self._broadcast_state_change(adapter, old_tier, new_tier))
                 logger.info(
@@ -126,9 +131,7 @@ class MockInferenceMixin:
                     else ("mock_skip_path_check" if adapter_name else None)
                 ),
                 "adapter_load_source": adapter_load_source,
-                "served_from_disk_tier": (
-                    tier_before == "disk" if adapter_name else None
-                ),
+                "served_from_disk_tier": served_from_disk_tier_val,
                 "mock": True,
                 "mock_tier_delay_ms": tier_delay_ms,
                 "mock_tier_details": tier_details,
@@ -152,9 +155,7 @@ class MockInferenceMixin:
                 tokens=tokens_generated,
                 tier_before=tier_before,
                 adapter_load_source=adapter_load_source,
-                served_from_disk_tier=(
-                    tier_before == "disk" if adapter_name is not None else None
-                ),
+                served_from_disk_tier=served_from_disk_tier_val,
                 mock=True,
             )
             self._ongoing -= 1
